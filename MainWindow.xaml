@@ -4,9 +4,10 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:ExpandScadaEditor"
-        mc:Ignorable="d"
+        xmlns:vectorEditor="clr-namespace:ExpandScadaEditor.ScreenEditor"
+        mc:Ignorable="d" Background="AliceBlue"
         Title="MainWindow" Height="450" Width="800">
     <Grid>
-
+        <vectorEditor:VectorEditor  BorderThickness="2" BorderBrush="Black"/>
     </Grid>
 </Window>
