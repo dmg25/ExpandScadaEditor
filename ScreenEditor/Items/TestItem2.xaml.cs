@@ -18,7 +18,7 @@ namespace ExpandScadaEditor.ScreenEditor.Items
     /// <summary>
     /// Логика взаимодействия для TestItem2.xaml
     /// </summary>
-    public partial class TestItem2 : UserControl
+    public partial class TestItem2 : ScreenElement
     {
         public TestItem2()
         {

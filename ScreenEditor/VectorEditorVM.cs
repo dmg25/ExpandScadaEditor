@@ -42,11 +42,6 @@ namespace ExpandScadaEditor.ScreenEditor
             }
         }
 
-        public ObservableCollection<BasicVectorItemVM> ElementsOnWorkSpace { get; set; } = new ObservableCollection<BasicVectorItemVM>();
-
-
-        public object DragDropBuffer { get; set; }
-
         // Only for tests for a while
         private double mouseX;
         public double MouseX
@@ -98,38 +93,7 @@ namespace ExpandScadaEditor.ScreenEditor
             Items.Add(new TestItem1VM());
             Items.Add(new TestItem2VM());
             Items.Add(new TestItem2VM());
-
-
-            // TODO move it to loading process or smth
-            ElementsOnWorkSpace.Add(new TestItem1VM() { CoordX = 10, CoordY = 20, UniqueName = "first"});
-
-            foreach (var item in ElementsOnWorkSpace)
-            {
-                item.PropertyChanged += Element_PropertyChanged;
-
-            }
-
-
         }
-
-
-        private void Element_PropertyChanged(object sender, PropertyChangedEventArgs e)
-        {
-            var vm = sender as BasicVectorItemVM;
-            if (e.PropertyName == nameof(vm.IsDragged))
-            {
-                if (vm.IsDragged)
-                {
-                    DragDropBuffer = sender;
-                }
-                else
-                {
-                    DragDropBuffer = null;
-                }
-
-            }
-        }
-
 
         public event PropertyChangedEventHandler PropertyChanged;
         public virtual void NotifyPropertyChanged([CallerMemberName] string propertyName = "")

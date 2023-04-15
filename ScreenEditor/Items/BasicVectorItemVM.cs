@@ -54,63 +54,6 @@ namespace ExpandScadaEditor.ScreenEditor.Items
 
         public bool StoredInCatalog { get; set; } = true;
 
-        private bool isDragged;
-        public bool IsDragged
-        {
-            get
-            {
-                return isDragged;
-            }
-            set
-            {
-                isDragged = value;
-                NotifyPropertyChanged();
-            }
-        }
-
-        private double coordX;
-        public double CoordX
-        {
-            get
-            {
-                return coordX;
-            }
-            set
-            {
-                coordX = value;
-                NotifyPropertyChanged();
-            }
-        }
-
-        private double coordY;
-        public double CoordY
-        {
-            get
-            {
-                return coordY;
-            }
-            set
-            {
-                coordY = value;
-                NotifyPropertyChanged();
-            }
-        }
-
-        private string uniqueName;
-        public string UniqueName
-        {
-            get
-            {
-                return uniqueName;
-            }
-            set
-            {
-                uniqueName = value;
-                NotifyPropertyChanged();
-            }
-        }
-
-
         private Command _selectItem;
         public Command SelectItem
         {
