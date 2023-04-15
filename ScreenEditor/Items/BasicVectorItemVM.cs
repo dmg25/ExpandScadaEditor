@@ -37,12 +37,79 @@ namespace ExpandScadaEditor.ScreenEditor.Items
      * 
      * */
 
+
+
+
+
+
+
+
+
     public abstract class BasicVectorItemVM : INotifyPropertyChanged
     {
         /// <summary>
         /// Groups of properties
         /// </summary>
         public Dictionary<string, Dictionary<string, Parameter>> Properties;
+
+        public bool StoredInCatalog { get; set; } = true;
+
+        private bool isDragged;
+        public bool IsDragged
+        {
+            get
+            {
+                return isDragged;
+            }
+            set
+            {
+                isDragged = value;
+                NotifyPropertyChanged();
+            }
+        }
+
+        private double coordX;
+        public double CoordX
+        {
+            get
+            {
+                return coordX;
+            }
+            set
+            {
+                coordX = value;
+                NotifyPropertyChanged();
+            }
+        }
+
+        private double coordY;
+        public double CoordY
+        {
+            get
+            {
+                return coordY;
+            }
+            set
+            {
+                coordY = value;
+                NotifyPropertyChanged();
+            }
+        }
+
+        private string uniqueName;
+        public string UniqueName
+        {
+            get
+            {
+                return uniqueName;
+            }
+            set
+            {
+                uniqueName = value;
+                NotifyPropertyChanged();
+            }
+        }
+
 
         private Command _selectItem;
         public Command SelectItem
@@ -77,6 +144,43 @@ namespace ExpandScadaEditor.ScreenEditor.Items
         {
             get;
             protected set;
+        }
+
+
+
+        public BasicVectorItemVM()
+        {
+            Properties = new Dictionary<string, Dictionary<string, Parameter>>();
+
+            Func<int, string> positiveIntValidation =
+                delegate (int val)
+                {
+                    if (val < 0)
+                        return "Must be positive!";
+                    return String.Empty;
+                };
+
+            // Position parameters
+            Dictionary<string, Parameter> positionParameters = new Dictionary<string, Parameter>
+            {
+                {"X", new Parameter<int>("X","Position X", 0, positiveIntValidation)},
+                {"Y", new Parameter<int>("Y","Position Y", 0, positiveIntValidation)},
+                {"Width", new Parameter<int>("Width","Width", 0, positiveIntValidation)},
+                {"Height", new Parameter<int>("Height","Height", 0, positiveIntValidation)}
+            };
+
+            Properties.Add("Geometry properties", positionParameters);
+        }
+
+
+        public virtual void CopySettingsFromAnotherVM(BasicVectorItemVM anotherVM)
+        {
+            // TODO check if we can get not just link to object
+            // TODO make it more elegant
+            Properties["Geometry properties"]["X"].ObjValue = anotherVM.Properties["Geometry properties"]["X"].ObjValue;
+            Properties["Geometry properties"]["Y"].ObjValue = anotherVM.Properties["Geometry properties"]["Y"].ObjValue;
+            Properties["Geometry properties"]["Width"].ObjValue = anotherVM.Properties["Geometry properties"]["Width"].ObjValue;
+            Properties["Geometry properties"]["Height"].ObjValue = anotherVM.Properties["Geometry properties"]["Height"].ObjValue;
         }
 
         public event PropertyChangedEventHandler PropertyChanged;
