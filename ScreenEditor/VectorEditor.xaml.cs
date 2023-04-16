@@ -20,11 +20,55 @@ using System.Collections.ObjectModel;
 
 namespace ExpandScadaEditor.ScreenEditor
 {
+    /*          EDITOR'S OPERATIONS
+     *      
+     *      MOVE ELEMENT
+     *      
+     *      MOVING WITH COPYING
+     *      
+     *      SELECT ONE ELEMENT AND SHOW BORDER FOR RESIZING
+     *      
+     *      SELECT GROUP OF ELEMENTS WITH MOUSE MOVING
+     *      
+     *      SELECT GROUP OF ELEMENTS WITH MOUSE POINTING
+     *      
+     *      MOVE GROUP OF ELEMENTS
+     *      
+     *      RESIZE GROUP OF ELEMENTS ???
+     *      
+     *      MOVING WITH COPYING FOR GROUP OF ELEMENTS
+     *      
+     *      ADD SCROLLBARS IF WORKSPACE BIGGER THEN WINDOW
+     *      
+     *      MOVE WORKSPACE WITH SCROLL OPERATIONS BY MOUSE + KEYS
+     *      
+     *      SHOW EMPTYNESS IF WINDOW IS BIGGER THEN WORKSPACE
+     *      
+     *      MOVING OPERATIONS ONLY INSIDE OF THE REAL WORKSPACE
+     *      
+     *      SCROLL WORKSPACE DURING THE MOVING
+     *      
+     *      CREATE ZOOM FUNCTIONS: TOOLS/MOUSE WHEEL + CTRL...
+     *      
+     *      
+     *      
+     *      COPY/PASTE WITH ADDITIONAL TOOLS/CONTEXT MENU
+     *      
+     *      
+     * 
+     * 
+     * 
+     * */
+
+
+
     /// <summary>
     /// Логика взаимодействия для VectorEditor.xaml
     /// </summary>
     public partial class VectorEditor : UserControl
     {
+        //const double BORDER_OFFSET = 5d;
+
         protected VectorEditorVM ViewModel
         {
             get { return (VectorEditorVM)Resources["ViewModel"]; }
@@ -32,6 +76,8 @@ namespace ExpandScadaEditor.ScreenEditor
 
         Dictionary<string, ScreenElement> elementsOnWorkSpace = new Dictionary<string, ScreenElement>();
         ScreenElement SelectedElement { get; set; }
+        double SelectedElementMousePressedCoordX { get; set; }
+        double SelectedElementMousePressedCoordY { get; set; }
 
         public VectorEditor()
         {
@@ -60,20 +106,24 @@ namespace ExpandScadaEditor.ScreenEditor
                 WorkSpace.Children.Add(pair.Value);
                 Canvas.SetLeft(pair.Value, pair.Value.CoordX);
                 Canvas.SetTop(pair.Value, pair.Value.CoordY);
-                pair.Value.PreviewMouseLeftButtonDown += Value_MouseLeftButtonDown;
-                pair.Value.PreviewMouseLeftButtonUp += Value_MouseLeftButtonUp;
+                pair.Value.PreviewMouseLeftButtonDown += Element_PreviewMouseLeftButtonDown;
+                pair.Value.PreviewMouseLeftButtonUp += Element_PreviewMouseLeftButtonUp;
             }
 
             
 
         }
 
-        private void Value_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        private void Element_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
             SelectedElement = sender as ScreenElement;
+            var mousePosition = e.GetPosition(SelectedElement);
+
+            SelectedElementMousePressedCoordX = mousePosition.X;
+            SelectedElementMousePressedCoordY = mousePosition.Y;
         }
 
-        private void Value_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+        private void Element_PreviewMouseLeftButtonUp(object sender, MouseButtonEventArgs e)
         {
             SelectedElement = null;
         }
@@ -110,23 +160,33 @@ namespace ExpandScadaEditor.ScreenEditor
             ViewModel.MouseX = mousePosition.X;
             ViewModel.MouseY = mousePosition.Y;
 
-            
 
-            
+
+
             if (SelectedElement != null && e.LeftButton == MouseButtonState.Pressed)
             {
                 if (elementsOnWorkSpace.ContainsKey(SelectedElement.Name))
                 {
-                    SelectedElement.CoordX = mousePosition.X;
-                    SelectedElement.CoordY = mousePosition.Y;
-                    Canvas.SetLeft(SelectedElement, mousePosition.X);
-                    Canvas.SetTop(SelectedElement, mousePosition.Y);
+                    double newPositionX = mousePosition.X - SelectedElementMousePressedCoordX;
+                    double newPositionY = mousePosition.Y - SelectedElementMousePressedCoordY;
+
+                    // check the borders of the workspace
+                    if (mousePosition.X >= WorkSpace.ActualWidth || mousePosition.X <= 0
+                       || mousePosition.Y >= WorkSpace.ActualHeight || mousePosition.Y <= 0)
+                    {
+                        return;
+                    }
+
+                    // move element
+                    SelectedElement.CoordX = newPositionX;
+                    SelectedElement.CoordY = newPositionY;
+                    Canvas.SetLeft(SelectedElement, newPositionX);
+                    Canvas.SetTop(SelectedElement, newPositionY);
                 }
 
             }
 
         }
-
 
     }
 }
