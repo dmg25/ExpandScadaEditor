@@ -40,6 +40,8 @@
                 MouseMove="WorkSpace_MouseMove"
                 PreviewMouseLeftButtonUp="Element_PreviewMouseLeftButtonUp">
 
+            <Border  BorderThickness="0.1" BorderBrush="Black" Canvas.Top="100" Canvas.Left="55" Width="100" Height="123"/>
+
             <TextBlock Canvas.Left="10" Canvas.Bottom="60" Text="{Binding MouseX}"/>
             <TextBlock Canvas.Left="10" Canvas.Bottom="40" Text="{Binding MouseY}"/>
             <TextBlock Canvas.Left="10" Canvas.Bottom="20" Text="{Binding MouseOverElement}"/>

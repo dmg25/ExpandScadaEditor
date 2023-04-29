@@ -6,11 +6,13 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:ExpandScadaEditor.ScreenEditor.Items"
              mc:Ignorable="d" 
-             d:DesignHeight="450" d:DesignWidth="800">
+             >
     <UserControl.Resources>
         <local:TestItem2VM x:Key="ViewModel" />
     </UserControl.Resources>
-    <Grid DataContext="{StaticResource ViewModel}">
+    <Grid DataContext="{StaticResource ViewModel}" >
         <TextBlock Text="Hello there" Width="100" Height="100" Background="DarkCyan" TextAlignment="Center" FontSize="20"/>
     </Grid>
+
+
 </local:ScreenElement>

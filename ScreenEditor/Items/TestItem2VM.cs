@@ -12,6 +12,11 @@ namespace ExpandScadaEditor.ScreenEditor.Items
         public TestItem2VM() : base()
         {
 
+
+
+
+
+
         }
 
 

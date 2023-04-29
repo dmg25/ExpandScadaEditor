@@ -58,5 +58,25 @@ namespace ExpandScadaEditor.ScreenEditor.Items
                 //NotifyPropertyChanged();
             }
         }
+
+        private Border borderAround;
+        public Border BorderAround
+        {
+            get
+            {
+                return borderAround;
+            }
+            set
+            {
+                borderAround = value;
+                //NotifyPropertyChanged();
+            }
+        }
+
+
+        public ScreenElement()
+        {
+
+        }
     }
 }

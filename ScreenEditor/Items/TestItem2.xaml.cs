@@ -23,6 +23,8 @@ namespace ExpandScadaEditor.ScreenEditor.Items
         public TestItem2()
         {
             InitializeComponent();
+
+
         }
     }
 }
