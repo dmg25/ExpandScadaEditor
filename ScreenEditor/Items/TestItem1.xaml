@@ -15,6 +15,6 @@
         <local:TestItem1VM x:Key="ViewModel" />
     </UserControl.Resources>
     <Grid DataContext="{StaticResource ViewModel}">
-        <TextBlock Text="Hello there" Width="100" Height="100" Background="Aquamarine" TextAlignment="Center" FontSize="20"/>
+        <TextBlock Text="Hello there" Width="50" Height="50" Background="Aquamarine" TextAlignment="Center" FontSize="20"/>
     </Grid>
 </UserControl>

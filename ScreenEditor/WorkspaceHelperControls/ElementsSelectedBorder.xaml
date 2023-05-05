@@ -6,5 +6,5 @@
              xmlns:local="clr-namespace:ExpandScadaEditor.ScreenEditor.WorkspaceHelperControls"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
-    <Border BorderBrush="Green" BorderThickness="1.5"/>
+    <Border BorderBrush="DimGray"  BorderThickness="2" Margin="-2"/>
 </UserControl>

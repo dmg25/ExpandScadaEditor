@@ -29,11 +29,11 @@ namespace ExpandScadaEditor.ScreenEditor.WorkspaceHelperControls
         public void AddBorderOnWorkspace(string name, ScreenElement element, Canvas workspace)
         {
             this.Name = name;
-            this.Width = element.ActualWidth + 1;
-            this.Height = element.ActualHeight + 1;
+            this.Width = element.ActualWidth;
+            this.Height = element.ActualHeight;
             workspace.Children.Add(this);
-            Canvas.SetLeft(this, element.CoordX - 1);
-            Canvas.SetTop(this, element.CoordY - 1);
+            Canvas.SetLeft(this, element.CoordX);
+            Canvas.SetTop(this, element.CoordY);
         }     
     }
 }

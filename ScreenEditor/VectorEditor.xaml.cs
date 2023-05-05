@@ -37,7 +37,12 @@ namespace ExpandScadaEditor.ScreenEditor
      *          - thickness of each border must be equal on any zoom variant
      *          - show thin border border on mouseOver event and hide on mouseGone
      *      
-     *      SELECT GROUP OF ELEMENTS WITH MOUSE MOVING
+     *   +++SELECT GROUP OF ELEMENTS WITH MOUSE MOVING
+     *          - create selection border during mouse moving
+     *          - select right-down: object selected if whole object covered
+     *          - select left-down:  object selected if whole object covered
+     *          - select left-up:    object selected if at least one point of it covered 
+     *          - select right-up:   object selected if at least one point of it covered 
      *      
      *      SELECT GROUP OF ELEMENTS WITH MOUSE POINTING
      *      
@@ -69,13 +74,7 @@ namespace ExpandScadaEditor.ScreenEditor
      * 
      * */
 
-    public enum MouseMovingMode
-    {
-        None,
-        MoveSelectedElements,
-        Selecting,
 
-    }
 
 
 
@@ -87,6 +86,8 @@ namespace ExpandScadaEditor.ScreenEditor
         //const double BORDER_OFFSET = 5d;
 
         const string MOUSE_OVER_SELECTED = "MOUSE_OVER_SELECTED";
+        const string SELECTING_RECTANGLE = "SELECTING_RECTANGLE";
+        const string SELECTED_RECTANGLE = "SELECTED_RECTANGLE";
 
         MouseMovingMode CurrentMouseMovingMode = MouseMovingMode.None;
 
@@ -102,6 +103,10 @@ namespace ExpandScadaEditor.ScreenEditor
 
         double SelectedElementMousePressedCoordX { get; set; }
         double SelectedElementMousePressedCoordY { get; set; }
+
+
+        ElementsSelectingBorder borderSelecting;
+        ElementsSelectedBorder borderSelected;
 
         public VectorEditor()
         {
@@ -121,7 +126,8 @@ namespace ExpandScadaEditor.ScreenEditor
             // Create/Load elements VM must be created automatically for each
             // TODO move it to loading process or smth
             elementsOnWorkSpace.Add("first", new TestItem2() { CoordX = 10, CoordY = 20, Name = "first"});
-
+            elementsOnWorkSpace.Add("second", new TestItem2() { CoordX = 100, CoordY = 100, Name = "second" });
+            elementsOnWorkSpace.Add("third", new TestItem2() { CoordX = 100, CoordY = 200, Name = "third" });
 
 
             // Put all elements on the workplace
@@ -136,9 +142,39 @@ namespace ExpandScadaEditor.ScreenEditor
                 // Just for showing border on mouse moving
                 pair.Value.MouseEnter += Element_MouseEnter;
                 pair.Value.MouseLeave += Element_MouseLeave;
+
+                
             }
 
-            
+            WorkSpace.PreviewMouseLeftButtonDown += WorkSpace_PreviewMouseLeftButtonDown;
+            WorkSpace.PreviewMouseLeftButtonUp += WorkSpace_PreviewMouseLeftButtonUp;
+
+        }
+
+        private void WorkSpace_PreviewMouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+        {
+            // end of selecting by mouse
+            if (borderSelecting != null)
+            {
+                WorkSpace.Children.Remove(borderSelecting);
+                borderSelecting = null;
+            }
+            WorkSpace.ReleaseMouseCapture();
+            //CurrentMouseMovingMode = MouseMovingMode.None;
+        }
+
+        private void WorkSpace_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            // start of selecting by mouse
+            var mousePosition = e.GetPosition(WorkSpace);
+
+            // drop all selected elements if there were before
+            DeselectAllElements();
+
+            borderSelecting = new ElementsSelectingBorder();
+            borderSelecting.AddBorderOnWorkspace(SELECTING_RECTANGLE, WorkSpace, mousePosition);
+            WorkSpace.CaptureMouse();
+            //CurrentMouseMovingMode = MouseMovingMode.Selecting;
 
         }
 
@@ -222,6 +258,10 @@ namespace ExpandScadaEditor.ScreenEditor
             {
                 CurrentMouseMovingMode = MouseMovingMode.MoveSelectedElements;
             }
+            else if (borderSelecting != null && e.LeftButton == MouseButtonState.Pressed)
+            {
+                CurrentMouseMovingMode = MouseMovingMode.Selecting;
+            }
             else
             {
                 CurrentMouseMovingMode = MouseMovingMode.None;
@@ -258,24 +298,18 @@ namespace ExpandScadaEditor.ScreenEditor
                     Canvas.SetLeft(SelectedElement, newPositionX);
                     Canvas.SetTop(SelectedElement, newPositionY);
                     break;
+                case MouseMovingMode.Selecting:
+                    if (borderSelecting != null)
+                    {
+                        // redraw border
+                        borderSelecting.ContinueSelection(currentPosition);
 
-                //case MouseMovingMode.MoveSelectedElements:
-                //    double newPositionX = currentPosition.X - SelectedElementMousePressedCoordX;
-                //    double newPositionY = currentPosition.Y - SelectedElementMousePressedCoordY;
+                        // selecting 
+                        ActualizeElementsCoveredBySelection();
 
-                //    // check the borders of the workspace
-                //    if (currentPosition.X >= WorkSpace.ActualWidth || currentPosition.X <= 0
-                //       || currentPosition.Y >= WorkSpace.ActualHeight || currentPosition.Y <= 0)
-                //    {
-                //        break;
-                //    }
 
-                //    // move element
-                //    SelectedElement.CoordX = newPositionX;
-                //    SelectedElement.CoordY = newPositionY;
-                //    Canvas.SetLeft(SelectedElement, newPositionX);
-                //    Canvas.SetTop(SelectedElement, newPositionY);
-                //    break;
+                    }
+                    break;
 
 
 
@@ -290,9 +324,90 @@ namespace ExpandScadaEditor.ScreenEditor
 
 
 
-        void SelectNewElement(ScreenElement element)
+        void ActualizeElementsCoveredBySelection()
+        {
+            Point selectRect1 = new Point(borderSelecting.CoordX, borderSelecting.CoordY);
+            Point selectRect2 = new Point(borderSelecting.CoordX + borderSelecting.ActualWidth, borderSelecting.CoordY + borderSelecting.ActualHeight);
+
+            switch (borderSelecting.currentSelectingDirection)
+            {
+                case MouseSelectingDirection.RightDown:
+                case MouseSelectingDirection.LeftDown:
+                    // object selected if whole object covered
+                    foreach (var element in elementsOnWorkSpace)
+                    {
+                        // check two points of current element: 1 - just coordinates; 2 - coord + width/height
+                        // coordinate of 1 point must be more then coord of point of selection rect.
+                        // coordinate of 2 point must be less then coord of second point of selection rect
+
+                        Point elementRect1 = new Point(element.Value.CoordX, element.Value.CoordY);
+                        Point elementRect2 = new Point(element.Value.CoordX + element.Value.ActualWidth, element.Value.CoordY + element.Value.ActualHeight);
+
+                        if (selectRect1.X <= elementRect1.X && selectRect1.Y <= elementRect1.Y
+                            && selectRect2.X >= elementRect2.X && selectRect2.Y >= elementRect2.Y)
+                        {
+                            if (!SelectedElements.ContainsKey(element.Key))
+                            {
+                                SelectElement(element.Value);
+                            }
+                        }
+                        else
+                        {
+                            if (SelectedElements.ContainsKey(element.Key))
+                            {
+                                DeselectOneElement(element.Value);
+                            }
+                        }
+                    }
+                    break;
+                case MouseSelectingDirection.LeftUp:
+                case MouseSelectingDirection.RightUp:
+                    // object selected in any piece of it is covered
+                    foreach (var element in elementsOnWorkSpace)
+                    {
+                        // if any coordinate of any of 2 points intersected with coordinates of selecting rect - object selected
+
+                        Point elementRect1 = new Point(element.Value.CoordX, element.Value.CoordY);
+                        Point elementRect2 = new Point(element.Value.CoordX + element.Value.ActualWidth, element.Value.CoordY + element.Value.ActualHeight);
+
+                        if (/*selectRect2.X >= elementRect1.X && selectRect2.Y >= elementRect1.Y*/
+                            selectRect1.X <= elementRect2.X && selectRect1.Y <= elementRect2.Y)
+                        {
+                            if (!SelectedElements.ContainsKey(element.Key))
+                            {
+                                SelectElement(element.Value);
+                            }
+                        }
+                        else
+                        {
+                            if (SelectedElements.ContainsKey(element.Key))
+                            {
+                                DeselectOneElement(element.Value);
+                            }
+                        }
+                    }
+
+                    break;
+            }
+
+
+
+        }
+
+
+
+        void SelectElement(ScreenElement element)
         {
             // add to the dictionaly and add border around
+            SelectedElements.Add(element.Name, element);
+
+            if (borderSelected == null)
+            {
+                borderSelected = new ElementsSelectedBorder();
+                borderSelected.AddBorderOnWorkspace(SELECTED_RECTANGLE, SelectedElements, WorkSpace);
+            }
+
+            borderSelected.ActualizeSelectedBorderSizes(SelectedElements);
         }
 
 
@@ -302,13 +417,52 @@ namespace ExpandScadaEditor.ScreenEditor
             // find border of this element and delete it
             // remove this element from the list
             // create version for string as argument?
+
+            if (!SelectedElements.ContainsKey(element.Name))
+            {
+                return;
+            }
+
+            SelectedElements.Remove(element.Name);
+
+            if (SelectedElements.Count == 0)
+            {
+                if (borderSelected != null)
+                {
+                    WorkSpace.Children.Remove(borderSelected);
+                    borderSelected = null;
+                }
+            }
+            else
+            {
+                if (borderSelected == null)
+                {
+                    borderSelected = new ElementsSelectedBorder();
+                    borderSelected.AddBorderOnWorkspace(SELECTED_RECTANGLE, SelectedElements, WorkSpace);
+                }
+
+                borderSelected.ActualizeSelectedBorderSizes(SelectedElements);
+            }
+
+            
         }
 
 
         void DeselectAllElements()
         {
             // find and delete all borders for each element and clean the dictionary
+            SelectedElements.Clear();
+            if (borderSelected != null)
+            {
+                WorkSpace.Children.Remove(borderSelected);
+                borderSelected = null;
+            }
+
         }
 
     }
+
+
+
+
 }
