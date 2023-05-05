@@ -182,7 +182,7 @@ namespace ExpandScadaEditor.ScreenEditor
         {
             var element = sender as ScreenElement;
 
-            FrameworkElement borderOverSelected = WorkSpace.Children.Cast<FrameworkElement>().Where(x => x.Name == $"{element.Name}_{MOUSE_OVER_SELECTED}").First();
+            FrameworkElement borderOverSelected = WorkSpace.Children.Cast<FrameworkElement>().Where(x => x.Name == $"{element.Name}_{MOUSE_OVER_SELECTED}").FirstOrDefault();
 
             if (borderOverSelected != null)
             {
