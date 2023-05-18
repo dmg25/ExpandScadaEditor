@@ -29,14 +29,14 @@ namespace ExpandScadaEditor.ScreenEditor.WorkspaceHelperControls
         public double CoordX { get; set; }
         public double CoordY { get; set; }
 
-        public void AddBorderOnWorkspace(string name, Dictionary<string, ScreenElement> selectedElements, Canvas workspace)
+        public void AddBorderOnWorkspace(string name, List<ScreenElement> selectedElements, Canvas workspace)
         {
             // just add the border with invisible sizes
             Point startPoint = new Point(0, 0);
             if (selectedElements != null && selectedElements.Count > 0)
             {
-                startPoint.X = selectedElements.ElementAt(0).Value.CoordX;
-                startPoint.Y = selectedElements.ElementAt(0).Value.CoordY;
+                startPoint.X = selectedElements[0].CoordX;
+                startPoint.Y = selectedElements[0].CoordY;
             }
 
             this.Name = name;
@@ -47,7 +47,7 @@ namespace ExpandScadaEditor.ScreenEditor.WorkspaceHelperControls
             Canvas.SetTop(this, startPoint.Y);
         }
 
-        public void ActualizeSelectedBorderSizes(Dictionary<string, ScreenElement> selectedElements)
+        public void ActualizeSelectedBorderSizes(List<ScreenElement> selectedElements)
         {
             // calculate coordinates of all elements and find position and size for this border
             if (selectedElements == null || selectedElements.Count == 0)
@@ -59,28 +59,28 @@ namespace ExpandScadaEditor.ScreenEditor.WorkspaceHelperControls
             Point point1 = new Point(double.NaN, double.NaN);
             Point point2 = new Point(double.NaN, double.NaN);
 
-            foreach (var pair in selectedElements)
+            foreach (var element in selectedElements)
             {
                 // find minimal left-up position of all elements
-                if (double.IsNaN(point1.X) || point1.X > pair.Value.CoordX)
+                if (double.IsNaN(point1.X) || point1.X > element.CoordX)
                 {
-                    point1.X = pair.Value.CoordX;
+                    point1.X = element.CoordX;
                 }
 
-                if (double.IsNaN(point1.Y) || point1.Y > pair.Value.CoordY)
+                if (double.IsNaN(point1.Y) || point1.Y > element.CoordY)
                 {
-                    point1.Y = pair.Value.CoordY;
+                    point1.Y = element.CoordY;
                 }
 
                 // maximal right-down point of all elements
-                if (double.IsNaN(point2.X) || point2.X < pair.Value.CoordX + pair.Value.ActualWidth)
+                if (double.IsNaN(point2.X) || point2.X < element.CoordX + element.ActualWidth)
                 {
-                    point2.X = pair.Value.CoordX + pair.Value.ActualWidth;
+                    point2.X = element.CoordX + element.ActualWidth;
                 }
 
-                if (double.IsNaN(point2.Y) || point2.Y < pair.Value.CoordY + pair.Value.ActualHeight)
+                if (double.IsNaN(point2.Y) || point2.Y < element.CoordY + element.ActualHeight)
                 {
-                    point2.Y = pair.Value.CoordY + pair.Value.ActualHeight;
+                    point2.Y = element.CoordY + element.ActualHeight;
                 }
             }
 

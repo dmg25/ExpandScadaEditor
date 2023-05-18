@@ -38,7 +38,7 @@
 
         <Canvas x:Name="WorkSpace" Grid.Column="2" AllowDrop="True" Background="Transparent"
                 MouseMove="WorkSpace_MouseMove"
-                PreviewMouseLeftButtonUp="Element_PreviewMouseLeftButtonUp">
+                >
 
             <TextBlock Canvas.Left="10" Canvas.Bottom="60" Text="{Binding MouseX}"/>
             <TextBlock Canvas.Left="10" Canvas.Bottom="40" Text="{Binding MouseY}"/>

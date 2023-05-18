@@ -25,6 +25,13 @@ namespace ExpandScadaEditor.ScreenEditor
     /*          EDITOR'S OPERATIONS
      *      
      *      MOVE ELEMENT
+     *          - press on element - it will be selected. And existed selection must be dropped before
+     *              - but only if there was no moving between mouseDown and mouseUp
+     *          - If was mouseDown on selected element/s and moving after - move all elements and do not drop selection
+     *              - care about borders of workspace - do not let any element go out of border
+     *              - check if pressed element is already selected and move all elements in this case
+     *              - if was not selected - drop current selection and select it and move only this element
+     *          - 
      *      
      *      MOVING WITH COPYING
      *      
@@ -97,13 +104,15 @@ namespace ExpandScadaEditor.ScreenEditor
         }
 
         Dictionary<string, ScreenElement> elementsOnWorkSpace = new Dictionary<string, ScreenElement>();
-        ScreenElement SelectedElement { get; set; }
+        //ScreenElement SelectedElement { get; set; }
 
-        Dictionary<string, ScreenElement> SelectedElements = new Dictionary<string, ScreenElement>();
+        //Dictionary<string, ScreenElement> SelectedElements = new Dictionary<string, ScreenElement>();
+
+        List<ScreenElement> SelectedElements = new List<ScreenElement>();
 
         double SelectedElementMousePressedCoordX { get; set; }
         double SelectedElementMousePressedCoordY { get; set; }
-
+        bool elementsWereMoved = false;
 
         ElementsSelectingBorder borderSelecting;
         ElementsSelectedBorder borderSelected;
@@ -136,8 +145,10 @@ namespace ExpandScadaEditor.ScreenEditor
                 WorkSpace.Children.Add(pair.Value);
                 Canvas.SetLeft(pair.Value, pair.Value.CoordX);
                 Canvas.SetTop(pair.Value, pair.Value.CoordY);
-                pair.Value.PreviewMouseLeftButtonDown += Element_PreviewMouseLeftButtonDown;
-                pair.Value.PreviewMouseLeftButtonUp += Element_PreviewMouseLeftButtonUp;
+                //pair.Value.PreviewMouseLeftButtonDown += Element_PreviewMouseLeftButtonDown;
+                //pair.Value.PreviewMouseLeftButtonUp += Element_PreviewMouseLeftButtonUp;
+                pair.Value.MouseLeftButtonDown += Element_MouseLeftButtonDown;
+                pair.Value.MouseLeftButtonUp += Element_MouseLeftButtonUp;
 
                 // Just for showing border on mouse moving
                 pair.Value.MouseEnter += Element_MouseEnter;
@@ -146,12 +157,14 @@ namespace ExpandScadaEditor.ScreenEditor
                 
             }
 
-            WorkSpace.PreviewMouseLeftButtonDown += WorkSpace_PreviewMouseLeftButtonDown;
-            WorkSpace.PreviewMouseLeftButtonUp += WorkSpace_PreviewMouseLeftButtonUp;
+            //WorkSpace.PreviewMouseLeftButtonDown += WorkSpace_PreviewMouseLeftButtonDown;
+            //WorkSpace.PreviewMouseLeftButtonUp += WorkSpace_PreviewMouseLeftButtonUp;
+            WorkSpace.MouseLeftButtonDown += WorkSpace_MouseLeftButtonDown;
+            WorkSpace.MouseLeftButtonUp += WorkSpace_MouseLeftButtonUp;
 
         }
 
-        private void WorkSpace_PreviewMouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+        private void WorkSpace_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
         {
             // end of selecting by mouse
             if (borderSelecting != null)
@@ -163,8 +176,23 @@ namespace ExpandScadaEditor.ScreenEditor
             //CurrentMouseMovingMode = MouseMovingMode.None;
         }
 
-        private void WorkSpace_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        private void WorkSpace_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
+            // Here is a logic for Canvas event only. If we clicked on any element - igrore this event
+            if (e.OriginalSource is not Canvas)
+            {
+                return;
+            }
+
+
+            //IInputElement clickedElement = Mouse.DirectlyOver;
+            //var element = clickedElement as ScreenElement;
+
+
+            //var element2 = e.OriginalSource as ScreenElement;
+            //var res = e.OriginalSource is ScreenElement;
+            //var ress = (ScreenElement)e.OriginalSource;
+
             // start of selecting by mouse
             var mousePosition = e.GetPosition(WorkSpace);
 
@@ -198,25 +226,45 @@ namespace ExpandScadaEditor.ScreenEditor
             var element = sender as ScreenElement;
 
             // If element already selected, border must be shown already
-            if (!SelectedElements.ContainsKey(element.Name))
+            if (!SelectedElements.Contains(element))
             {
                 MouseOverElementBorder borderAround = new MouseOverElementBorder();
                 borderAround.AddBorderOnWorkspace($"{element.Name}_{MOUSE_OVER_SELECTED}", element, WorkSpace);
             }
         }
 
-        private void Element_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        private void Element_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
-            SelectedElement = sender as ScreenElement;
-            var mousePosition = e.GetPosition(SelectedElement);
+            // if this element is not selected - drop current selection and select this element
+            // if this element is selected - do nothing
 
+            var element = sender as ScreenElement;
+
+            if (!SelectedElements.Contains(element))
+            {
+                DeselectAllElements();
+                SelectElement(element);
+            }
+
+            //SelectedElement = sender as ScreenElement;
+            var mousePosition = e.GetPosition(element);
             SelectedElementMousePressedCoordX = mousePosition.X;
             SelectedElementMousePressedCoordY = mousePosition.Y;
         }
 
-        private void Element_PreviewMouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+        private void Element_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
         {
-            SelectedElement = null;
+            // check if there was a moving. If was - do nothing, if wasn't - drop current selection and select current element only
+            var element = sender as ScreenElement;
+
+            if (!elementsWereMoved)
+            {
+                DeselectAllElements();
+                SelectElement(element);
+            }
+
+            elementsWereMoved = false;
+
         }
 
         DataTemplate CreateTemplateByName(Type viewType)
@@ -253,15 +301,14 @@ namespace ExpandScadaEditor.ScreenEditor
 
 
 
-
-            if (SelectedElement != null && e.LeftButton == MouseButtonState.Pressed && elementsOnWorkSpace.ContainsKey(SelectedElement.Name))
-            {
-                CurrentMouseMovingMode = MouseMovingMode.MoveSelectedElements;
-            }
-            else if (borderSelecting != null && e.LeftButton == MouseButtonState.Pressed)
+            if (e.LeftButton == MouseButtonState.Pressed && borderSelecting != null)
             {
                 CurrentMouseMovingMode = MouseMovingMode.Selecting;
             }
+            else if(e.LeftButton == MouseButtonState.Pressed && SelectedElements.Count != 0 /*&& elementsOnWorkSpace.ContainsKey(SelectedElement.Name)*/)
+            {
+                CurrentMouseMovingMode = MouseMovingMode.MoveSelectedElements;
+            }           
             else
             {
                 CurrentMouseMovingMode = MouseMovingMode.None;
@@ -293,10 +340,10 @@ namespace ExpandScadaEditor.ScreenEditor
                     }
 
                     // move element
-                    SelectedElement.CoordX = newPositionX;
-                    SelectedElement.CoordY = newPositionY;
-                    Canvas.SetLeft(SelectedElement, newPositionX);
-                    Canvas.SetTop(SelectedElement, newPositionY);
+                    //SelectedElement.CoordX = newPositionX;
+                    //SelectedElement.CoordY = newPositionY;
+                    //Canvas.SetLeft(SelectedElement, newPositionX);
+                    //Canvas.SetTop(SelectedElement, newPositionY);
                     break;
                 case MouseMovingMode.Selecting:
                     if (borderSelecting != null)
@@ -346,14 +393,14 @@ namespace ExpandScadaEditor.ScreenEditor
                         if (selectRect1.X <= elementRect1.X && selectRect1.Y <= elementRect1.Y
                             && selectRect2.X >= elementRect2.X && selectRect2.Y >= elementRect2.Y)
                         {
-                            if (!SelectedElements.ContainsKey(element.Key))
+                            if (!SelectedElements.Contains(element.Value))
                             {
                                 SelectElement(element.Value);
                             }
                         }
                         else
                         {
-                            if (SelectedElements.ContainsKey(element.Key))
+                            if (SelectedElements.Contains(element.Value))
                             {
                                 DeselectOneElement(element.Value);
                             }
@@ -370,17 +417,17 @@ namespace ExpandScadaEditor.ScreenEditor
                         Point elementRect1 = new Point(element.Value.CoordX, element.Value.CoordY);
                         Point elementRect2 = new Point(element.Value.CoordX + element.Value.ActualWidth, element.Value.CoordY + element.Value.ActualHeight);
 
-                        if (/*selectRect2.X >= elementRect1.X && selectRect2.Y >= elementRect1.Y*/
+                        if (selectRect2.X >= elementRect1.X && selectRect2.Y >= elementRect1.Y &&
                             selectRect1.X <= elementRect2.X && selectRect1.Y <= elementRect2.Y)
                         {
-                            if (!SelectedElements.ContainsKey(element.Key))
+                            if (!SelectedElements.Contains(element.Value))
                             {
                                 SelectElement(element.Value);
                             }
                         }
                         else
                         {
-                            if (SelectedElements.ContainsKey(element.Key))
+                            if (SelectedElements.Contains(element.Value))
                             {
                                 DeselectOneElement(element.Value);
                             }
@@ -399,7 +446,7 @@ namespace ExpandScadaEditor.ScreenEditor
         void SelectElement(ScreenElement element)
         {
             // add to the dictionaly and add border around
-            SelectedElements.Add(element.Name, element);
+            SelectedElements.Add(element);
 
             if (borderSelected == null)
             {
@@ -418,12 +465,12 @@ namespace ExpandScadaEditor.ScreenEditor
             // remove this element from the list
             // create version for string as argument?
 
-            if (!SelectedElements.ContainsKey(element.Name))
+            if (!SelectedElements.Contains(element))
             {
                 return;
             }
 
-            SelectedElements.Remove(element.Name);
+            SelectedElements.Remove(element);
 
             if (SelectedElements.Count == 0)
             {
