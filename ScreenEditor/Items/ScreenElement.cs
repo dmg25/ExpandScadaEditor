@@ -12,6 +12,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using ExpandScadaEditor.ScreenEditor.WorkspaceHelperControls;
 
 
 namespace ExpandScadaEditor.ScreenEditor.Items
@@ -59,24 +60,51 @@ namespace ExpandScadaEditor.ScreenEditor.Items
             }
         }
 
-        private Border borderAround;
-        public Border BorderAround
+        public void ShowResizeBorder()
         {
-            get
+            try
             {
-                return borderAround;
+                var resizeBorder = (ElementResizingBorder)this.FindName("RESIZE_BORDER");
+                if (resizeBorder != null)
+                {
+                    
+                    resizeBorder.Visibility = Visibility.Visible;
+                }
+                
             }
-            set
+            catch (Exception ex)
             {
-                borderAround = value;
-                //NotifyPropertyChanged();
+                // ADD TO LOG   
             }
+
+        }
+
+        public void HideResizeBorder()
+        {
+            try
+            {
+                var resizeBorder = (ElementResizingBorder)this.FindName("RESIZE_BORDER");
+                if (resizeBorder != null)
+                {
+                    resizeBorder.Visibility = Visibility.Hidden;
+                }
+            }
+            catch (Exception ex)
+            {
+                // ADD TO LOG   
+            }
+
         }
 
 
         public ScreenElement()
         {
+            Initialized += ScreenElement_Initialized;
+        }
 
+        private void ScreenElement_Initialized(object sender, EventArgs e)
+        {
+            HideResizeBorder();
         }
     }
 }

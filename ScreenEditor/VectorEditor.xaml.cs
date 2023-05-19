@@ -535,6 +535,9 @@ namespace ExpandScadaEditor.ScreenEditor
             // add to the dictionaly and add border around
             SelectedElements.Add(element);
 
+            element.ShowResizeBorder();
+
+
             //if (borderSelected == null)
             //{
             //    borderSelected = new ElementsSelectedBorder();
@@ -558,6 +561,8 @@ namespace ExpandScadaEditor.ScreenEditor
             }
 
             SelectedElements.Remove(element);
+            element.HideResizeBorder();
+
 
             //if (SelectedElements.Count == 0)
             //{
@@ -578,14 +583,21 @@ namespace ExpandScadaEditor.ScreenEditor
             //    borderSelected.ActualizeSelectedBorderSizes(SelectedElements);
             //}
 
-            
+
         }
 
 
         void DeselectAllElements()
         {
             // find and delete all borders for each element and clean the dictionary
+
+            foreach (var element in SelectedElements)
+            {
+                element.HideResizeBorder();
+            }
+
             SelectedElements.Clear();
+
             //if (borderSelected != null)
             //{
             //    WorkSpace.Children.Remove(borderSelected);
