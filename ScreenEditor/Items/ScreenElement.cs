@@ -19,6 +19,9 @@ namespace ExpandScadaEditor.ScreenEditor.Items
 {
     public class ScreenElement : UserControl
     {
+        public const string RESIZE_BORDER_NAME = "RESIZE_BORDER";
+        public const string COVER_BORDER_NAME = "COVER_BORDER";
+
         private bool isDragged;
         public bool IsDragged
         {
@@ -64,7 +67,7 @@ namespace ExpandScadaEditor.ScreenEditor.Items
         {
             try
             {
-                var resizeBorder = (ElementResizingBorder)this.FindName("RESIZE_BORDER");
+                var resizeBorder = (ElementResizingBorder)this.FindName(RESIZE_BORDER_NAME);
                 if (resizeBorder != null)
                 {
                     
@@ -74,7 +77,7 @@ namespace ExpandScadaEditor.ScreenEditor.Items
             }
             catch (Exception ex)
             {
-                // ADD TO LOG   
+                // TODO ADD TO LOG   
             }
 
         }
@@ -83,7 +86,7 @@ namespace ExpandScadaEditor.ScreenEditor.Items
         {
             try
             {
-                var resizeBorder = (ElementResizingBorder)this.FindName("RESIZE_BORDER");
+                var resizeBorder = (ElementResizingBorder)this.FindName(RESIZE_BORDER_NAME);
                 if (resizeBorder != null)
                 {
                     resizeBorder.Visibility = Visibility.Hidden;
@@ -91,7 +94,43 @@ namespace ExpandScadaEditor.ScreenEditor.Items
             }
             catch (Exception ex)
             {
-                // ADD TO LOG   
+                // TODO ADD TO LOG   
+            }
+
+        }
+
+        public void ShowCoverBorder()
+        {
+            try
+            {
+                var coverBorder = (MouseOverElementBorder)this.FindName(COVER_BORDER_NAME);
+                if (coverBorder != null)
+                {
+
+                    coverBorder.Visibility = Visibility.Visible;
+                }
+
+            }
+            catch (Exception ex)
+            {
+                // TODO ADD TO LOG   
+            }
+
+        }
+
+        public void HideCoverBorder()
+        {
+            try
+            {
+                var coverBorder = (MouseOverElementBorder)this.FindName(COVER_BORDER_NAME);
+                if (coverBorder != null)
+                {
+                    coverBorder.Visibility = Visibility.Hidden;
+                }
+            }
+            catch (Exception ex)
+            {
+                // TODO ADD TO LOG   
             }
 
         }
@@ -100,11 +139,24 @@ namespace ExpandScadaEditor.ScreenEditor.Items
         public ScreenElement()
         {
             Initialized += ScreenElement_Initialized;
+            MouseEnter += ScreenElement_MouseEnter;
+            MouseLeave += ScreenElement_MouseLeave;
+        }
+
+        private void ScreenElement_MouseLeave(object sender, MouseEventArgs e)
+        {
+            HideCoverBorder();
+        }
+
+        private void ScreenElement_MouseEnter(object sender, MouseEventArgs e)
+        {
+            ShowCoverBorder();
         }
 
         private void ScreenElement_Initialized(object sender, EventArgs e)
         {
             HideResizeBorder();
+            HideCoverBorder();
         }
     }
 }

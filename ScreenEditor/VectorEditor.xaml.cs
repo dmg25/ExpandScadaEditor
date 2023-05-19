@@ -122,9 +122,9 @@ namespace ExpandScadaEditor.ScreenEditor
     {
         //const double BORDER_OFFSET = 5d;
 
-        const string MOUSE_OVER_SELECTED = "MOUSE_OVER_SELECTED";
+        //const string MOUSE_OVER_SELECTED = "MOUSE_OVER_SELECTED";
         const string SELECTING_RECTANGLE = "SELECTING_RECTANGLE";
-        const string SELECTED_RECTANGLE = "SELECTED_RECTANGLE";
+        //const string SELECTED_RECTANGLE = "SELECTED_RECTANGLE";
 
         MouseMovingMode CurrentMouseMovingMode = MouseMovingMode.None;
 
@@ -182,8 +182,8 @@ namespace ExpandScadaEditor.ScreenEditor
                 pair.Value.MouseLeftButtonUp += Element_MouseLeftButtonUp;
 
                 // Just for showing border on mouse moving
-                pair.Value.MouseEnter += Element_MouseEnter;
-                pair.Value.MouseLeave += Element_MouseLeave;
+                //pair.Value.MouseEnter += Element_MouseEnter;
+                //pair.Value.MouseLeave += Element_MouseLeave;
 
                 
             }
@@ -238,34 +238,34 @@ namespace ExpandScadaEditor.ScreenEditor
 
         }
 
-        private void Element_MouseLeave(object sender, MouseEventArgs e)
-        {
-            // TODO strange behaviour: if we click-select-move element, this border can be still there (visible), separate from element. 
-            //      in the end it will be disappear, but we have to get rid of it
-            var element = sender as ScreenElement;
+        //private void Element_MouseLeave(object sender, MouseEventArgs e)
+        //{
+        //    // TODO strange behaviour: if we click-select-move element, this border can be still there (visible), separate from element. 
+        //    //      in the end it will be disappear, but we have to get rid of it
+        //    var element = sender as ScreenElement;
 
-            FrameworkElement borderOverSelected = WorkSpace.Children.Cast<FrameworkElement>().Where(x => x.Name == $"{element.Name}_{MOUSE_OVER_SELECTED}").FirstOrDefault();
+        //    FrameworkElement borderOverSelected = WorkSpace.Children.Cast<FrameworkElement>().Where(x => x.Name == $"{element.Name}_{MOUSE_OVER_SELECTED}").FirstOrDefault();
 
-            if (borderOverSelected != null)
-            {
-                WorkSpace.Children.Remove(borderOverSelected);
-                borderOverSelected = null;
-            }
+        //    if (borderOverSelected != null)
+        //    {
+        //        WorkSpace.Children.Remove(borderOverSelected);
+        //        borderOverSelected = null;
+        //    }
 
-        }
+        //}
 
-        private void Element_MouseEnter(object sender, MouseEventArgs e)
-        {
-            // Add the border
-            var element = sender as ScreenElement;
+        //private void Element_MouseEnter(object sender, MouseEventArgs e)
+        //{
+        //    // Add the border
+        //    var element = sender as ScreenElement;
 
-            // If element already selected, border must be shown already
-            if (!SelectedElements.Contains(element))
-            {
-                MouseOverElementBorder borderAround = new MouseOverElementBorder();
-                borderAround.AddBorderOnWorkspace($"{element.Name}_{MOUSE_OVER_SELECTED}", element, WorkSpace);
-            }
-        }
+        //    // If element already selected, border must be shown already
+        //    if (!SelectedElements.Contains(element))
+        //    {
+        //        MouseOverElementBorder borderAround = new MouseOverElementBorder();
+        //        borderAround.AddBorderOnWorkspace($"{element.Name}_{MOUSE_OVER_SELECTED}", element, WorkSpace);
+        //    }
+        //}
 
         private void Element_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
