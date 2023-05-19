@@ -24,7 +24,7 @@ namespace ExpandScadaEditor.ScreenEditor
 {
     /*          EDITOR'S OPERATIONS
      *      
-     *      MOVE ELEMENT
+     *   +++MOVE ELEMENT
      *          - press on element - it will be selected. And existed selection must be dropped before
      *              - but only if there was no moving between mouseDown and mouseUp
      *          - If was mouseDown on selected element/s and moving after - move all elements and do not drop selection
@@ -33,7 +33,27 @@ namespace ExpandScadaEditor.ScreenEditor
      *              - if was not selected - drop current selection and select it and move only this element
      *          - 
      *      
-     *      MOVING WITH COPYING
+     *      COPYING & PASTE
+     *          - Copy by command
+     *              - r-click on screen element shows context menu (comes from basic class)
+     *              - there is copy command - press - this item(s) (SELECTED) will be saved to buffer
+     *              - the same must be for any selected group from menu/toolbox
+     *              - catch ctrl+c command - do the same
+     *          - Copy during the moving
+     *              - if user select the group, and started to move it, then:
+     *                  - if ctrl not pressed - move items as usual
+     *                  - if pressed - place original element on starting position and create a copy with opacity, move the copy
+     *                  - if element was moved and only then ctrl was pressed - return original element and move the copy
+     *                  - if moving happens with ctrl and ctrl was dropped - delete copy of element and move original element to current position
+     *          - Paste by command (context menu on workspace or menu/toolbox, ctrl+v)
+     *              - each element in buffer has current coordinates on copying moment - add to these coordinates 5+10px and place all elements with new coodrs
+     *              - give each element new name. 
+     *                  - if current name has no number postfix (_NN) there is not, ot can not be converted to number - add postfix "_1"
+     *                  - if there is postfix - increase it
+     *              - check if pasting coordinates are not out of border. If new coord bigger then border - set elements at border
+     *              
+     *              
+     *              
      *      
      *      SELECT ONE ELEMENT AND SHOW BORDER FOR RESIZING
      *          - create list of selected elements, add one or many elements on selecting and clear after dropping selection
@@ -71,7 +91,9 @@ namespace ExpandScadaEditor.ScreenEditor
      *      
      *      CREATE ZOOM FUNCTIONS: TOOLS/MOUSE WHEEL + CTRL...
      *      
+     *      UNDO/REDO user's action
      *      
+     *      ADD ICON FOR ROTATION
      *      
      *      COPY/PASTE WITH ADDITIONAL TOOLS/CONTEXT MENU
      *      
@@ -81,7 +103,15 @@ namespace ExpandScadaEditor.ScreenEditor
      * 
      * */
 
-
+    /*  TODO FUNCTIONALITY
+     *  
+     *  1. When a group of elements selected show special icon "+" with arrows, to move whole group. 
+     *     There could be situation, that selected elements are too small to move them by pressing on them
+     * 
+     * 
+     * 
+     * 
+     * */
 
 
 
@@ -109,13 +139,14 @@ namespace ExpandScadaEditor.ScreenEditor
         //Dictionary<string, ScreenElement> SelectedElements = new Dictionary<string, ScreenElement>();
 
         List<ScreenElement> SelectedElements = new List<ScreenElement>();
+        int selectedElementIndexByMouse = -1;
 
         double SelectedElementMousePressedCoordX { get; set; }
         double SelectedElementMousePressedCoordY { get; set; }
         bool elementsWereMoved = false;
 
         ElementsSelectingBorder borderSelecting;
-        ElementsSelectedBorder borderSelected;
+        //ElementsSelectedBorder borderSelected;
 
         public VectorEditor()
         {
@@ -173,6 +204,7 @@ namespace ExpandScadaEditor.ScreenEditor
                 borderSelecting = null;
             }
             WorkSpace.ReleaseMouseCapture();
+
             //CurrentMouseMovingMode = MouseMovingMode.None;
         }
 
@@ -208,6 +240,8 @@ namespace ExpandScadaEditor.ScreenEditor
 
         private void Element_MouseLeave(object sender, MouseEventArgs e)
         {
+            // TODO strange behaviour: if we click-select-move element, this border can be still there (visible), separate from element. 
+            //      in the end it will be disappear, but we have to get rid of it
             var element = sender as ScreenElement;
 
             FrameworkElement borderOverSelected = WorkSpace.Children.Cast<FrameworkElement>().Where(x => x.Name == $"{element.Name}_{MOUSE_OVER_SELECTED}").FirstOrDefault();
@@ -250,6 +284,8 @@ namespace ExpandScadaEditor.ScreenEditor
             var mousePosition = e.GetPosition(element);
             SelectedElementMousePressedCoordX = mousePosition.X;
             SelectedElementMousePressedCoordY = mousePosition.Y;
+            selectedElementIndexByMouse = SelectedElements.IndexOf(element);
+
         }
 
         private void Element_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
@@ -264,7 +300,7 @@ namespace ExpandScadaEditor.ScreenEditor
             }
 
             elementsWereMoved = false;
-
+            selectedElementIndexByMouse = -1;
         }
 
         DataTemplate CreateTemplateByName(Type viewType)
@@ -326,18 +362,69 @@ namespace ExpandScadaEditor.ScreenEditor
             switch (CurrentMouseMovingMode)
             {
                 case MouseMovingMode.MoveSelectedElements:
+                    elementsWereMoved = true;
                     double newPositionX = currentPosition.X - SelectedElementMousePressedCoordX;
                     double newPositionY = currentPosition.Y - SelectedElementMousePressedCoordY;
 
-                    // MAKE LOGIC FOR MANY ELEMENTS MOVING
+                    if (selectedElementIndexByMouse < 0)
+                    {
+                        return;
+                    }
+
+                    double offsetX = newPositionX - SelectedElements[selectedElementIndexByMouse].CoordX;
+                    double offsetY = newPositionY - SelectedElements[selectedElementIndexByMouse].CoordY;
+
+                    // calculate offset for pressed element for new coordinates
+                    // use this offset for each selected element - calculate new coordinates
+                    // set new coordinates for each element
+
+                    // check for each element the border of workspace. If border reached - break
+                    // we can move one element a little off the board, but if there is a group - nonono
+                    if (SelectedElements.Count == 1)
+                    {
+                        if (currentPosition.X >= WorkSpace.ActualWidth || currentPosition.X <= 0
+                           || currentPosition.Y >= WorkSpace.ActualHeight || currentPosition.Y <= 0)
+                        {
+                            return;
+                        }
+                    }
+                    else
+                    {
+                        foreach (var element in SelectedElements)
+                        {
+                            if (element.CoordX + offsetX + element.ActualWidth >= WorkSpace.ActualWidth
+                                || element.CoordY + offsetY + element.ActualHeight >= WorkSpace.ActualHeight
+                                || element.CoordX + offsetX <= 0 || element.CoordY + offsetY <= 0)
+                            {
+                                return;
+                            }
+                        }
+                    }
+
+
+                    // set new coordinates for each element
+                    foreach (var element in SelectedElements)
+                    {
+                        element.CoordX += offsetX;
+                        element.CoordY += offsetY;
+                        Canvas.SetLeft(element, element.CoordX);
+                        Canvas.SetTop(element, element.CoordY);
+                    }
+
+                    // and set new coordinates for selected_border
+                    //borderSelected.CoordX += offsetX;
+                    //borderSelected.CoordY += offsetY;
+                    //Canvas.SetLeft(borderSelected, borderSelected.CoordX);
+                    //Canvas.SetTop(borderSelected, borderSelected.CoordY);
+
 
 
                     // check the borders of the workspace
-                    if (currentPosition.X >= WorkSpace.ActualWidth || currentPosition.X <= 0
-                       || currentPosition.Y >= WorkSpace.ActualHeight || currentPosition.Y <= 0)
-                    {
-                        break;
-                    }
+                    //if (currentPosition.X >= WorkSpace.ActualWidth || currentPosition.X <= 0
+                    //   || currentPosition.Y >= WorkSpace.ActualHeight || currentPosition.Y <= 0)
+                    //{
+                    //    break;
+                    //}
 
                     // move element
                     //SelectedElement.CoordX = newPositionX;
@@ -448,13 +535,13 @@ namespace ExpandScadaEditor.ScreenEditor
             // add to the dictionaly and add border around
             SelectedElements.Add(element);
 
-            if (borderSelected == null)
-            {
-                borderSelected = new ElementsSelectedBorder();
-                borderSelected.AddBorderOnWorkspace(SELECTED_RECTANGLE, SelectedElements, WorkSpace);
-            }
+            //if (borderSelected == null)
+            //{
+            //    borderSelected = new ElementsSelectedBorder();
+            //    borderSelected.AddBorderOnWorkspace(SELECTED_RECTANGLE, SelectedElements, WorkSpace);
+            //}
 
-            borderSelected.ActualizeSelectedBorderSizes(SelectedElements);
+            //borderSelected.ActualizeSelectedBorderSizes(SelectedElements);
         }
 
 
@@ -472,24 +559,24 @@ namespace ExpandScadaEditor.ScreenEditor
 
             SelectedElements.Remove(element);
 
-            if (SelectedElements.Count == 0)
-            {
-                if (borderSelected != null)
-                {
-                    WorkSpace.Children.Remove(borderSelected);
-                    borderSelected = null;
-                }
-            }
-            else
-            {
-                if (borderSelected == null)
-                {
-                    borderSelected = new ElementsSelectedBorder();
-                    borderSelected.AddBorderOnWorkspace(SELECTED_RECTANGLE, SelectedElements, WorkSpace);
-                }
+            //if (SelectedElements.Count == 0)
+            //{
+            //    if (borderSelected != null)
+            //    {
+            //        WorkSpace.Children.Remove(borderSelected);
+            //        borderSelected = null;
+            //    }
+            //}
+            //else
+            //{
+            //    if (borderSelected == null)
+            //    {
+            //        borderSelected = new ElementsSelectedBorder();
+            //        borderSelected.AddBorderOnWorkspace(SELECTED_RECTANGLE, SelectedElements, WorkSpace);
+            //    }
 
-                borderSelected.ActualizeSelectedBorderSizes(SelectedElements);
-            }
+            //    borderSelected.ActualizeSelectedBorderSizes(SelectedElements);
+            //}
 
             
         }
@@ -499,11 +586,11 @@ namespace ExpandScadaEditor.ScreenEditor
         {
             // find and delete all borders for each element and clean the dictionary
             SelectedElements.Clear();
-            if (borderSelected != null)
-            {
-                WorkSpace.Children.Remove(borderSelected);
-                borderSelected = null;
-            }
+            //if (borderSelected != null)
+            //{
+            //    WorkSpace.Children.Remove(borderSelected);
+            //    borderSelected = null;
+            //}
 
         }
 
