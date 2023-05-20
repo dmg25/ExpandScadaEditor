@@ -12,8 +12,9 @@
         <local:TestItem2VM x:Key="ViewModel" />
     </UserControl.Resources>
     <Grid DataContext="{StaticResource ViewModel}" >
+        <TextBlock Text="Hello there" Width="auto" Height="auto" Background="DarkCyan" TextAlignment="Center" FontSize="20"/>
         <helpers:MouseOverElementBorder x:Name="COVER_BORDER"/>
         <helpers:ElementResizingBorder x:Name="RESIZE_BORDER"/>
-        <TextBlock Text="Hello there" Width="50" Height="50" Background="DarkCyan" TextAlignment="Center" FontSize="20"/>
+        
     </Grid>
 </local:ScreenElement>

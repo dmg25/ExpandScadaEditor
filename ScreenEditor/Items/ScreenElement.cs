@@ -17,23 +17,12 @@ using ExpandScadaEditor.ScreenEditor.WorkspaceHelperControls;
 
 namespace ExpandScadaEditor.ScreenEditor.Items
 {
-
-    /* 
-     *  - catch click event on each resizing element
-     *  - subscribe here on each event and calculate offset for new size/position
-     *  - after offset is calculated invoke event with result and workspace will change the element
-     * 
-     * */
-
-
     public class ScreenElement : UserControl
     {
         public const string RESIZE_BORDER_NAME = "RESIZE_BORDER";
         public const string COVER_BORDER_NAME = "COVER_BORDER";
 
         public event EventHandler<ResizingEventArgs> OnElementResizing;
-        public event EventHandler StartResizing;
-        public event EventHandler StopResizing;
 
         private bool isDragged;
         public bool IsDragged
@@ -171,6 +160,7 @@ namespace ExpandScadaEditor.ScreenEditor.Items
 
         private void ScreenElement_Initialized(object sender, EventArgs e)
         {
+            // Just WPf hacking....
             HideResizeBorder();
             HideCoverBorder();
 

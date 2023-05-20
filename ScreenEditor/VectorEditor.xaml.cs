@@ -55,7 +55,7 @@ namespace ExpandScadaEditor.ScreenEditor
      *              
      *              
      *      
-     *      SELECT ONE ELEMENT AND SHOW BORDER FOR RESIZING
+     *   +++SELECT ONE ELEMENT AND SHOW BORDER FOR RESIZING
      *          - create list of selected elements, add one or many elements on selecting and clear after dropping selection
      *          - each element in this list must show very thin border (just by property on basic element class)
      *          - every time recalculate rectangle around these elements and show border around this invisible rectangle
@@ -73,7 +73,7 @@ namespace ExpandScadaEditor.ScreenEditor
      *      
      *      SELECT GROUP OF ELEMENTS WITH MOUSE POINTING
      *      
-     *      MOVE GROUP OF ELEMENTS
+     *   +++MOVE GROUP OF ELEMENTS
      *      
      *      RESIZE GROUP OF ELEMENTS ???
      *      
@@ -145,8 +145,6 @@ namespace ExpandScadaEditor.ScreenEditor
         double SelectedElementMousePressedCoordY { get; set; }
         bool elementsWereMoved = false;
 
-        //bool movingInResizeMode = false;
-
         ElementsSelectingBorder borderSelecting;
 
         public VectorEditor()
@@ -181,8 +179,6 @@ namespace ExpandScadaEditor.ScreenEditor
                 pair.Value.MouseLeftButtonUp += Element_MouseLeftButtonUp;
 
                 pair.Value.OnElementResizing += Element_OnElementResizing;
-                //pair.Value.StartResizing += Element_StartResizing;
-                //pair.Value.StopResizing += Element_StopResizing;
             }
             WorkSpace.MouseLeftButtonDown += WorkSpace_MouseLeftButtonDown;
             WorkSpace.MouseLeftButtonUp += WorkSpace_MouseLeftButtonUp;
