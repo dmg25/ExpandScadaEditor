@@ -145,8 +145,9 @@ namespace ExpandScadaEditor.ScreenEditor
         double SelectedElementMousePressedCoordY { get; set; }
         bool elementsWereMoved = false;
 
+        //bool movingInResizeMode = false;
+
         ElementsSelectingBorder borderSelecting;
-        //ElementsSelectedBorder borderSelected;
 
         public VectorEditor()
         {
@@ -176,22 +177,41 @@ namespace ExpandScadaEditor.ScreenEditor
                 WorkSpace.Children.Add(pair.Value);
                 Canvas.SetLeft(pair.Value, pair.Value.CoordX);
                 Canvas.SetTop(pair.Value, pair.Value.CoordY);
-                //pair.Value.PreviewMouseLeftButtonDown += Element_PreviewMouseLeftButtonDown;
-                //pair.Value.PreviewMouseLeftButtonUp += Element_PreviewMouseLeftButtonUp;
                 pair.Value.MouseLeftButtonDown += Element_MouseLeftButtonDown;
                 pair.Value.MouseLeftButtonUp += Element_MouseLeftButtonUp;
 
-                // Just for showing border on mouse moving
-                //pair.Value.MouseEnter += Element_MouseEnter;
-                //pair.Value.MouseLeave += Element_MouseLeave;
-
-                
+                pair.Value.OnElementResizing += Element_OnElementResizing;
+                //pair.Value.StartResizing += Element_StartResizing;
+                //pair.Value.StopResizing += Element_StopResizing;
             }
-
-            //WorkSpace.PreviewMouseLeftButtonDown += WorkSpace_PreviewMouseLeftButtonDown;
-            //WorkSpace.PreviewMouseLeftButtonUp += WorkSpace_PreviewMouseLeftButtonUp;
             WorkSpace.MouseLeftButtonDown += WorkSpace_MouseLeftButtonDown;
             WorkSpace.MouseLeftButtonUp += WorkSpace_MouseLeftButtonUp;
+
+        }
+
+        private void Element_OnElementResizing(object sender, ResizingEventArgs e)
+        {
+            var element = sender as ScreenElement;
+            switch (e.ResizingType)
+            {
+                case ResizingType.ChangeSize:
+                    double newWidth = element.ActualWidth + e.OffsetX;
+                    double newHeight = element.ActualHeight + e.OffsetY;
+                    if (newWidth + element.CoordX < WorkSpace.ActualWidth)
+                    {
+                        element.Width = newWidth;
+                    }
+                    if (newHeight + element.CoordY < WorkSpace.ActualHeight)
+                    {
+                        element.Height = newHeight;
+                    }
+
+                    break;
+                case ResizingType.ChangeCoordinates:
+
+                    break;
+            }
+
 
         }
 
@@ -204,8 +224,6 @@ namespace ExpandScadaEditor.ScreenEditor
                 borderSelecting = null;
             }
             WorkSpace.ReleaseMouseCapture();
-
-            //CurrentMouseMovingMode = MouseMovingMode.None;
         }
 
         private void WorkSpace_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
@@ -216,15 +234,6 @@ namespace ExpandScadaEditor.ScreenEditor
                 return;
             }
 
-
-            //IInputElement clickedElement = Mouse.DirectlyOver;
-            //var element = clickedElement as ScreenElement;
-
-
-            //var element2 = e.OriginalSource as ScreenElement;
-            //var res = e.OriginalSource is ScreenElement;
-            //var ress = (ScreenElement)e.OriginalSource;
-
             // start of selecting by mouse
             var mousePosition = e.GetPosition(WorkSpace);
 
@@ -234,38 +243,8 @@ namespace ExpandScadaEditor.ScreenEditor
             borderSelecting = new ElementsSelectingBorder();
             borderSelecting.AddBorderOnWorkspace(SELECTING_RECTANGLE, WorkSpace, mousePosition);
             WorkSpace.CaptureMouse();
-            //CurrentMouseMovingMode = MouseMovingMode.Selecting;
 
         }
-
-        //private void Element_MouseLeave(object sender, MouseEventArgs e)
-        //{
-        //    // TODO strange behaviour: if we click-select-move element, this border can be still there (visible), separate from element. 
-        //    //      in the end it will be disappear, but we have to get rid of it
-        //    var element = sender as ScreenElement;
-
-        //    FrameworkElement borderOverSelected = WorkSpace.Children.Cast<FrameworkElement>().Where(x => x.Name == $"{element.Name}_{MOUSE_OVER_SELECTED}").FirstOrDefault();
-
-        //    if (borderOverSelected != null)
-        //    {
-        //        WorkSpace.Children.Remove(borderOverSelected);
-        //        borderOverSelected = null;
-        //    }
-
-        //}
-
-        //private void Element_MouseEnter(object sender, MouseEventArgs e)
-        //{
-        //    // Add the border
-        //    var element = sender as ScreenElement;
-
-        //    // If element already selected, border must be shown already
-        //    if (!SelectedElements.Contains(element))
-        //    {
-        //        MouseOverElementBorder borderAround = new MouseOverElementBorder();
-        //        borderAround.AddBorderOnWorkspace($"{element.Name}_{MOUSE_OVER_SELECTED}", element, WorkSpace);
-        //    }
-        //}
 
         private void Element_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
@@ -320,14 +299,6 @@ namespace ExpandScadaEditor.ScreenEditor
             return template;
         }
 
-
-       
-
-
-
-
-
-
         private void WorkSpace_MouseMove(object sender, MouseEventArgs e)
         {
             // test
@@ -335,7 +306,10 @@ namespace ExpandScadaEditor.ScreenEditor
             ViewModel.MouseX = mousePosition.X;
             ViewModel.MouseY = mousePosition.Y;
 
-
+            //if (movingInResizeMode)
+            //{
+            //    return;
+            //}
 
             if (e.LeftButton == MouseButtonState.Pressed && borderSelecting != null)
             {
@@ -411,26 +385,6 @@ namespace ExpandScadaEditor.ScreenEditor
                         Canvas.SetTop(element, element.CoordY);
                     }
 
-                    // and set new coordinates for selected_border
-                    //borderSelected.CoordX += offsetX;
-                    //borderSelected.CoordY += offsetY;
-                    //Canvas.SetLeft(borderSelected, borderSelected.CoordX);
-                    //Canvas.SetTop(borderSelected, borderSelected.CoordY);
-
-
-
-                    // check the borders of the workspace
-                    //if (currentPosition.X >= WorkSpace.ActualWidth || currentPosition.X <= 0
-                    //   || currentPosition.Y >= WorkSpace.ActualHeight || currentPosition.Y <= 0)
-                    //{
-                    //    break;
-                    //}
-
-                    // move element
-                    //SelectedElement.CoordX = newPositionX;
-                    //SelectedElement.CoordY = newPositionY;
-                    //Canvas.SetLeft(SelectedElement, newPositionX);
-                    //Canvas.SetTop(SelectedElement, newPositionY);
                     break;
                 case MouseMovingMode.Selecting:
                     if (borderSelecting != null)
@@ -534,17 +488,7 @@ namespace ExpandScadaEditor.ScreenEditor
         {
             // add to the dictionaly and add border around
             SelectedElements.Add(element);
-
             element.ShowResizeBorder();
-
-
-            //if (borderSelected == null)
-            //{
-            //    borderSelected = new ElementsSelectedBorder();
-            //    borderSelected.AddBorderOnWorkspace(SELECTED_RECTANGLE, SelectedElements, WorkSpace);
-            //}
-
-            //borderSelected.ActualizeSelectedBorderSizes(SelectedElements);
         }
 
 
@@ -562,28 +506,6 @@ namespace ExpandScadaEditor.ScreenEditor
 
             SelectedElements.Remove(element);
             element.HideResizeBorder();
-
-
-            //if (SelectedElements.Count == 0)
-            //{
-            //    if (borderSelected != null)
-            //    {
-            //        WorkSpace.Children.Remove(borderSelected);
-            //        borderSelected = null;
-            //    }
-            //}
-            //else
-            //{
-            //    if (borderSelected == null)
-            //    {
-            //        borderSelected = new ElementsSelectedBorder();
-            //        borderSelected.AddBorderOnWorkspace(SELECTED_RECTANGLE, SelectedElements, WorkSpace);
-            //    }
-
-            //    borderSelected.ActualizeSelectedBorderSizes(SelectedElements);
-            //}
-
-
         }
 
 
@@ -597,13 +519,6 @@ namespace ExpandScadaEditor.ScreenEditor
             }
 
             SelectedElements.Clear();
-
-            //if (borderSelected != null)
-            //{
-            //    WorkSpace.Children.Remove(borderSelected);
-            //    borderSelected = null;
-            //}
-
         }
 
     }

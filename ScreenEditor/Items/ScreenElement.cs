@@ -17,10 +17,23 @@ using ExpandScadaEditor.ScreenEditor.WorkspaceHelperControls;
 
 namespace ExpandScadaEditor.ScreenEditor.Items
 {
+
+    /* 
+     *  - catch click event on each resizing element
+     *  - subscribe here on each event and calculate offset for new size/position
+     *  - after offset is calculated invoke event with result and workspace will change the element
+     * 
+     * */
+
+
     public class ScreenElement : UserControl
     {
         public const string RESIZE_BORDER_NAME = "RESIZE_BORDER";
         public const string COVER_BORDER_NAME = "COVER_BORDER";
+
+        public event EventHandler<ResizingEventArgs> OnElementResizing;
+        public event EventHandler StartResizing;
+        public event EventHandler StopResizing;
 
         private bool isDragged;
         public bool IsDragged
@@ -92,9 +105,6 @@ namespace ExpandScadaEditor.ScreenEditor.Items
                 {
                     resizeBorder.Visibility = Visibility.Hidden;
                     Cursor = Cursors.Arrow;
-
-                   // resizeBorder.Cursor = Cursors.SizeNWSE;
-
                 }
             }
             catch (Exception ex)
@@ -163,6 +173,58 @@ namespace ExpandScadaEditor.ScreenEditor.Items
         {
             HideResizeBorder();
             HideCoverBorder();
+
+            //resizing events
+            try
+            {
+                var resizeBorder = (ElementResizingBorder)this.FindName(RESIZE_BORDER_NAME);
+                if (resizeBorder != null)
+                {
+                    resizeBorder.SizeRight.MouseMove += SizeRight_MouseMove;
+                    resizeBorder.SizeRight.MouseLeftButtonDown += SizeRight_MouseLeftButtonDown;
+                    resizeBorder.SizeRight.MouseLeftButtonUp += SizeRight_MouseLeftButtonUp;
+                }
+            }
+            catch (Exception ex)
+            {
+                // TODO ADD TO LOG   
+            }
+        }
+
+        private void SizeRight_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+        {
+            var shape = sender as Shape;
+            shape.ReleaseMouseCapture();
+            e.Handled = true;
+            // StopResizing(this, new EventArgs());
+            // this.ReleaseMouseCapture();
+        }
+
+        private void SizeRight_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            var shape = sender as Shape;
+            shape.CaptureMouse();
+            e.Handled = true;
+            // StartResizing(this, new EventArgs());
+           // this.CaptureMouse();
+        }
+
+        private void SizeRight_MouseMove(object sender, MouseEventArgs e)
+        {
+            //e.Handled = true;
+            if (e.LeftButton == MouseButtonState.Pressed)
+            {
+                var mousePosition = e.GetPosition(this);
+
+                OnElementResizing(this, new ResizingEventArgs
+                {
+                    ResizingType = ResizingType.ChangeSize,
+                    OffsetX = mousePosition.X - this.ActualWidth,
+                    OffsetY = 0
+                });
+
+            }
+            
         }
     }
 }
