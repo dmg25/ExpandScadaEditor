@@ -12,19 +12,8 @@
         <local:TestItem2VM x:Key="ViewModel" />
     </UserControl.Resources>
     <Grid DataContext="{StaticResource ViewModel}" >
-        
         <helpers:MouseOverElementBorder x:Name="COVER_BORDER"/>
         <helpers:ElementResizingBorder x:Name="RESIZE_BORDER"/>
         <TextBlock Text="Hello there" Width="50" Height="50" Background="DarkCyan" TextAlignment="Center" FontSize="20"/>
     </Grid>
-    <!--<Border x:Name="RESIZE_BORDER" BorderBrush="BlueViolet" BorderThickness="0" Margin="2,0,2,0" >
-        <Grid DataContext="{StaticResource ViewModel}" >
-            <TextBlock Text="Hello there" Width="50" Height="50" Background="DarkCyan" TextAlignment="Center" FontSize="20"/>
-        </Grid>
-    </Border>-->
-    <!--<helpers:ElementResizingBorder x:Name="RESIZE_BORDER">
-        <Grid DataContext="{StaticResource ViewModel}" >
-            <TextBlock Text="Hello there" Width="50" Height="50" Background="DarkCyan" TextAlignment="Center" FontSize="20"/>
-        </Grid>
-    </helpers:ElementResizingBorder>-->
 </local:ScreenElement>

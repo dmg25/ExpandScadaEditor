@@ -72,6 +72,7 @@ namespace ExpandScadaEditor.ScreenEditor.Items
                 {
                     
                     resizeBorder.Visibility = Visibility.Visible;
+                    Cursor = Cursors.SizeAll;
                 }
                 
             }
@@ -90,6 +91,10 @@ namespace ExpandScadaEditor.ScreenEditor.Items
                 if (resizeBorder != null)
                 {
                     resizeBorder.Visibility = Visibility.Hidden;
+                    Cursor = Cursors.Arrow;
+
+                   // resizeBorder.Cursor = Cursors.SizeNWSE;
+
                 }
             }
             catch (Exception ex)
@@ -135,6 +140,7 @@ namespace ExpandScadaEditor.ScreenEditor.Items
 
         }
 
+         
 
         public ScreenElement()
         {

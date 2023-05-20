@@ -23,6 +23,15 @@ namespace ExpandScadaEditor.ScreenEditor.WorkspaceHelperControls
         public ElementResizingBorder()
         {
             InitializeComponent();
+            SizeNWSE_leftUp.Cursor = Cursors.SizeNWSE;
+            SizeNESW_rightUp.Cursor = Cursors.SizeNESW;
+            SizeNESW_leftDown.Cursor = Cursors.SizeNESW;
+            SizeNWSE_rightDown.Cursor = Cursors.SizeNWSE;
+
+            SizeLeft.Cursor = Cursors.SizeWE;
+            SizeRight.Cursor = Cursors.SizeWE;
+            SizeTop.Cursor = Cursors.SizeNS;
+            SizeBottom.Cursor = Cursors.SizeNS;
         }
     }
 }
