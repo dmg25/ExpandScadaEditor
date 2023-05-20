@@ -9,7 +9,8 @@ namespace ExpandScadaEditor.ScreenEditor.Items
     public class ResizingEventArgs : EventArgs
     {
         public ResizingType ResizingType { get; set; }
-        public double OffsetX { get; set; }
-        public double OffsetY { get; set; }
+        public double NewWidth { get; set; } = double.NaN;
+        public double NewHeight { get; set; } = double.NaN;
+        public double NewAngle { get; set; } = double.NaN;
     }
 }

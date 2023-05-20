@@ -195,21 +195,18 @@ namespace ExpandScadaEditor.ScreenEditor
             switch (e.ResizingType)
             {
                 case ResizingType.ChangeSize:
-                    double newWidth = element.ActualWidth + e.OffsetX;
-                    double newHeight = element.ActualHeight + e.OffsetY;
-                    if (newWidth + element.CoordX < WorkSpace.ActualWidth)
+                    if (!double.IsNaN(e.NewWidth) && e.NewWidth + element.CoordX < WorkSpace.ActualWidth)
                     {
-                        element.Width = newWidth;
+                        element.Width = e.NewWidth;
                     }
-                    if (newHeight + element.CoordY < WorkSpace.ActualHeight)
+                    if (!double.IsNaN(e.NewHeight) && e.NewHeight + element.CoordY < WorkSpace.ActualHeight)
                     {
-                        element.Height = newHeight;
+                        element.Height = e.NewHeight;
                     }
-
+                    Canvas.SetLeft(element, element.CoordX);
+                    Canvas.SetTop(element, element.CoordY);
                     break;
-                case ResizingType.ChangeCoordinates:
-
-                    break;
+                    
             }
 
 

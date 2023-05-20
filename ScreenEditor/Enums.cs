@@ -25,7 +25,6 @@ namespace ExpandScadaEditor.ScreenEditor
     public enum ResizingType
     {
         ChangeSize,
-        ChangeCoordinates,
         RotateToRight,
         RotateToLeft
     }
