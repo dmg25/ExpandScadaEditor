@@ -20,14 +20,36 @@
             <ColumnDefinition Width="Auto" />
             <ColumnDefinition MinWidth="50"/>
         </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="25"/>
+            <RowDefinition/>
+        </Grid.RowDefinitions>
 
-        <ListView Grid.Column="0"
+        <ToolBarTray Grid.ColumnSpan="5">
+            <ToolBarTray.Background>
+                <SolidColorBrush Color="{DynamicResource {x:Static SystemColors.ControlColorKey}}"/>
+            </ToolBarTray.Background>
+
+            <ToolBar Height="25">
+                <ToolBar.Background>
+                    <SolidColorBrush Color="{DynamicResource {x:Static SystemColors.ControlColorKey}}"/>
+                </ToolBar.Background>
+
+                <Button Content="Undo" Command="{Binding Undo}" />
+                <Button Content="Redo" />
+
+            </ToolBar>
+            
+            
+        </ToolBarTray>
+
+        <ListView Grid.Column="0" Grid.Row="1"
                 ItemsSource="{Binding Items}" 
                 ItemTemplateSelector="{StaticResource ItemsTemplateSelector}">  <!--ItemTemplateSelector="{DynamicResource ItemsTemplateSelector}"-->
                 
         </ListView>
-        
-        <GridSplitter Grid.Column="1"
+
+        <GridSplitter Grid.Column="1" Grid.Row="1"
               HorizontalAlignment="Center"
               VerticalAlignment="Stretch"
               Background="White" 
@@ -36,7 +58,7 @@
               />
 
 
-        <Canvas x:Name="WorkSpace" Grid.Column="2" AllowDrop="True" Background="Transparent"
+        <Canvas x:Name="WorkSpace" Grid.Column="2" Grid.Row="1" AllowDrop="True" Background="Transparent"
                 MouseMove="WorkSpace_MouseMove"
                 >
 
@@ -44,9 +66,9 @@
             <TextBlock Canvas.Left="10" Canvas.Bottom="40" Text="{Binding MouseY}"/>
             <TextBlock Canvas.Left="10" Canvas.Bottom="20" Text="{Binding MouseOverElement}"/>
         </Canvas>
-        
-        
-        <GridSplitter Grid.Column="3"
+
+
+        <GridSplitter Grid.Column="3" Grid.Row="1"
               HorizontalAlignment="Center"
               VerticalAlignment="Stretch"
               Background="White" 

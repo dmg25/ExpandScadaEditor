@@ -17,6 +17,7 @@ using System.Windows.Shapes;
 using ExpandScadaEditor.ScreenEditor.Items;
 using System.Windows.Markup;
 using System.Collections.ObjectModel;
+using System.Windows.Media.Media3D;
 
 using ExpandScadaEditor.ScreenEditor.WorkspaceHelperControls;
 
@@ -74,9 +75,7 @@ namespace ExpandScadaEditor.ScreenEditor
      *      SELECT GROUP OF ELEMENTS WITH MOUSE POINTING
      *      
      *   +++MOVE GROUP OF ELEMENTS
-     *      
-     *      RESIZE GROUP OF ELEMENTS ???
-     *      
+     *            
      *      MOVING WITH COPYING FOR GROUP OF ELEMENTS
      *      
      *      ADD SCROLLBARS IF WORKSPACE BIGGER THEN WINDOW
@@ -128,12 +127,12 @@ namespace ExpandScadaEditor.ScreenEditor
 
         MouseMovingMode CurrentMouseMovingMode = MouseMovingMode.None;
 
-        protected VectorEditorVM ViewModel
+        protected VectorEditorVM VM
         {
             get { return (VectorEditorVM)Resources["ViewModel"]; }
         }
 
-        Dictionary<string, ScreenElement> elementsOnWorkSpace = new Dictionary<string, ScreenElement>();
+        
         //ScreenElement SelectedElement { get; set; }
 
         //Dictionary<string, ScreenElement> SelectedElements = new Dictionary<string, ScreenElement>();
@@ -147,10 +146,13 @@ namespace ExpandScadaEditor.ScreenEditor
 
         ElementsSelectingBorder borderSelecting;
 
+        
+
         public VectorEditor()
         {
             InitializeComponent();
 
+            
 
             // TODO For tests, later make it better
             ItemsTemplateSelector itemsTemplateSelector = (ItemsTemplateSelector)Resources["ItemsTemplateSelector"];
@@ -162,27 +164,79 @@ namespace ExpandScadaEditor.ScreenEditor
             itemsTemplateSelector.previewTemplates = previewTemplates;
 
 
-            // Create/Load elements VM must be created automatically for each
-            // TODO move it to loading process or smth
-            elementsOnWorkSpace.Add("first", new TestItem2() { CoordX = 10, CoordY = 20, Name = "first"});
-            elementsOnWorkSpace.Add("second", new TestItem2() { CoordX = 100, CoordY = 100, Name = "second" });
-            elementsOnWorkSpace.Add("third", new TestItem2() { CoordX = 100, CoordY = 200, Name = "third" });
-
+            VM.NewScreenElementAdded += VM_NewScreenElementAdded;
+            VM.ScreenElementReplaced += VM_ScreenElementReplaced;
+            VM.Initialize();
 
             // Put all elements on the workplace
-            foreach (var pair in elementsOnWorkSpace)
-            {
-                WorkSpace.Children.Add(pair.Value);
-                Canvas.SetLeft(pair.Value, pair.Value.CoordX);
-                Canvas.SetTop(pair.Value, pair.Value.CoordY);
-                pair.Value.MouseLeftButtonDown += Element_MouseLeftButtonDown;
-                pair.Value.MouseLeftButtonUp += Element_MouseLeftButtonUp;
+            //foreach (var pair in VM.ElementsOnWorkSpace)
+            //{
+            //    WorkSpace.Children.Add(pair.Value);
+            //    Canvas.SetLeft(pair.Value, pair.Value.CoordX);
+            //    Canvas.SetTop(pair.Value, pair.Value.CoordY);
+            //    pair.Value.MouseLeftButtonDown += Element_MouseLeftButtonDown;
+            //    pair.Value.MouseLeftButtonUp += Element_MouseLeftButtonUp;
+            //    pair.Value.OnElementResizing += Element_OnElementResizing;
+            //}
 
-                pair.Value.OnElementResizing += Element_OnElementResizing;
-            }
             WorkSpace.MouseLeftButtonDown += WorkSpace_MouseLeftButtonDown;
             WorkSpace.MouseLeftButtonUp += WorkSpace_MouseLeftButtonUp;
 
+            
+        }
+
+
+        //private void ClearViewPort()
+        //{
+        //    ModelVisual3D viewPortChildLocal;
+        //    for (int i = WorkSpace.Children.Count - 1; i >= 0; i--)
+        //    {
+        //        viewPortChildLocal = (ModelVisual3D)WorkSpace.Children[i];
+        //        if (viewPortChildLocal.Content is DirectionalLight == false)
+        //        {
+        //            WorkSpace.Children.RemoveAt(i);
+        //        }
+        //    }
+        //}
+
+
+        private void VM_ScreenElementReplaced(object sender, ReplacingElementEventArgs e)
+        {
+            WorkSpace.Children.Remove(e.OldElement);
+
+
+            var parent = VisualTreeHelper.GetParent(e.NewElement);
+            WorkSpace.Children.Remove(e.NewElement);
+            WorkSpace.Children.Add(e.NewElement);
+
+
+
+
+
+
+
+            //if (e.OldElement != null)
+            //{
+            //    WorkSpace.Children.Remove(e.OldElement);
+            //    e.OldElement = null;
+            //}
+            //VM_NewScreenElementAdded(null, new ScreenElementEventArgs() { Element = e.NewElement });
+        }
+
+        private void VM_NewScreenElementAdded(object sender, ScreenElementEventArgs e)
+        {
+            WorkSpace.Children.Add(e.Element);
+            Canvas.SetLeft(e.Element, e.Element.CoordX);
+            Canvas.SetTop(e.Element, e.Element.CoordY);
+            e.Element.MouseLeftButtonDown += Element_MouseLeftButtonDown;
+            e.Element.MouseLeftButtonUp += Element_MouseLeftButtonUp;
+            e.Element.OnElementResizing += Element_OnElementResizing;
+            e.Element.ElementResized += Element_ElementResized;
+        }
+
+        private void Element_ElementResized(object sender, EventArgs e)
+        {
+            VM.UndoRedo.NewUserAction(sender as ScreenElement);
         }
 
         private void Element_OnElementResizing(object sender, ResizingEventArgs e)
@@ -296,8 +350,8 @@ namespace ExpandScadaEditor.ScreenEditor
         {
             // test
             var mousePosition = e.GetPosition(WorkSpace);
-            ViewModel.MouseX = mousePosition.X;
-            ViewModel.MouseY = mousePosition.Y;
+            VM.MouseX = mousePosition.X;
+            VM.MouseY = mousePosition.Y;
 
             //if (movingInResizeMode)
             //{
@@ -415,7 +469,7 @@ namespace ExpandScadaEditor.ScreenEditor
                 case MouseSelectingDirection.RightDown:
                 case MouseSelectingDirection.LeftDown:
                     // object selected if whole object covered
-                    foreach (var element in elementsOnWorkSpace)
+                    foreach (var element in VM.ElementsOnWorkSpace)
                     {
                         // check two points of current element: 1 - just coordinates; 2 - coord + width/height
                         // coordinate of 1 point must be more then coord of point of selection rect.
@@ -444,7 +498,7 @@ namespace ExpandScadaEditor.ScreenEditor
                 case MouseSelectingDirection.LeftUp:
                 case MouseSelectingDirection.RightUp:
                     // object selected in any piece of it is covered
-                    foreach (var element in elementsOnWorkSpace)
+                    foreach (var element in VM.ElementsOnWorkSpace)
                     {
                         // if any coordinate of any of 2 points intersected with coordinates of selecting rect - object selected
 

@@ -17,23 +17,24 @@ using ExpandScadaEditor.ScreenEditor.WorkspaceHelperControls;
 
 namespace ExpandScadaEditor.ScreenEditor.Items
 {
-    public class ScreenElement : UserControl
+    public class ScreenElement : UserControl, ICloneable
     {
         public const string RESIZE_BORDER_NAME = "RESIZE_BORDER";
         public const string COVER_BORDER_NAME = "COVER_BORDER";
 
         public event EventHandler<ResizingEventArgs> OnElementResizing;
+        public event EventHandler ElementResized;
 
-        private bool isDragged;
-        public bool IsDragged
+        private int id;
+        public int Id
         {
             get
             {
-                return isDragged;
+                return id;
             }
             set
             {
-                isDragged = value;
+                id = value;
             }
         }
 
@@ -342,6 +343,7 @@ namespace ExpandScadaEditor.ScreenEditor.Items
             var shape = sender as Shape;
             shape.ReleaseMouseCapture();
             e.Handled = true;
+            ElementResized(this, new EventArgs());
         }
 
         private void Resizing_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
@@ -351,6 +353,11 @@ namespace ExpandScadaEditor.ScreenEditor.Items
             e.Handled = true;
         }
 
-        
+
+        public object Clone()
+        {
+            return this.MemberwiseClone();
+        }
+
     }
 }

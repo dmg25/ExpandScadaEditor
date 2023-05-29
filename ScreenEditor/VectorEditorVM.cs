@@ -10,24 +10,33 @@ using System.Collections.ObjectModel;
 
 namespace ExpandScadaEditor.ScreenEditor
 {
-    /*      PLAN
-     *  - Create user basic user control which represents any shape/icon, contains common properties , xaml code for rendering
-     *  - Create a couple of simple items based on this user control
-     *      - first just straight, but after - try to load dynamically from some dll or even external xml file
-     *  - Create collection of these elements here and init it on start. 
-     *  - show this collection on the side-panel 
-     *  - create logic with some binding to take this item and put on the canvas panel
-     * 
-     *  - create properties panel for selected item (even canvas) and showing on another side panel
-     *  - create validation on each parameter and reaction on changing too
-     * 
-     * 
-     * 
-     * */
-
-
     public class VectorEditorVM : INotifyPropertyChanged
     {
+        /*  undo/redo
+         *      - Create class or service to contain user's actions
+         *          - class OperationsMemory
+         *          - contains Undo and Redo list/queue
+         *          - item is list of ScreenElements with all actual properties
+         *      - Create undo/redo methods
+         *          - undo 
+         *              - find all elements from undo index in workspace elements dictionary
+         *                and apply all properties (or just whole object, why not)
+         *              - if there is no element with this ID in dictionary - create and put on space
+         *          - redo - the same
+         *          - after UNdo list was used - take item and put in the redo list
+         *          - if undo list was filled witn new index from workspace - clean redo list
+         *      - Create 2 commands for undo and redo
+         *      - think out, how to add actions to queue
+         *          - just method "add user action"
+         * */
+
+
+        public UndoRedoContainer UndoRedo = new UndoRedoContainer();
+
+        public event EventHandler<ScreenElementEventArgs> NewScreenElementAdded;
+        public event EventHandler<ReplacingElementEventArgs> ScreenElementReplaced;
+        
+
         private List<BasicVectorItemVM> items = new List<BasicVectorItemVM>();
         public List<BasicVectorItemVM> Items 
         { 
@@ -84,15 +93,111 @@ namespace ExpandScadaEditor.ScreenEditor
                 NotifyPropertyChanged();
             }
         }
+
+
+        int idForNewScreenElement;
+        //int IdForNewScreenElement
+        //{
+        //    get
+        //    {
+        //        return _idForNewScreenElement++;
+        //    }
+        //}
+
+        public Dictionary<int, ScreenElement> ElementsOnWorkSpace { get; set; } = new Dictionary<int, ScreenElement>();
+
+
+
         // -------------------------------------------------------
 
+
+
+        private Command _undo;
+        public Command Undo
+        {
+            get
+            {
+                return _undo ??
+                    (_undo = new Command(obj =>
+                    {
+                        var undoElements = UndoRedo.Undo();
+
+                        foreach (var element in undoElements)
+                        {
+                            if (ElementsOnWorkSpace.ContainsKey(element.Id))
+                            {
+                                ReplaceExistingElement(element);
+                            }
+                            else
+                            {
+                                AddNewScreenElement(element);
+                            }
+                        }
+                    },
+                    obj =>
+                    {
+                        return UndoRedo.UndoIsPossible();
+                    }));
+            }
+        }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         public VectorEditorVM()
+        {
+            
+        }
+
+        public void Initialize()
         {
             // tests!
             Items.Add(new TestItem1VM());
             Items.Add(new TestItem1VM());
             Items.Add(new TestItem2VM());
             Items.Add(new TestItem2VM());
+
+
+            // Create/Load elements VM must be created automatically for each
+            // TODO move it to loading process or smth
+            AddNewScreenElement(new TestItem2() { CoordX = 10, CoordY = 20, Name = "first", Width = 50, Height = 50 });
+            AddNewScreenElement(new TestItem2() { CoordX = 100, CoordY = 100, Name = "second", Width = 50, Height = 50 });
+            AddNewScreenElement(new TestItem2() { CoordX = 100, CoordY = 200, Name = "third", Width = 50, Height = 50 });
+        }
+
+        public void AddNewScreenElement(ScreenElement element)
+        {
+            int newId = idForNewScreenElement++;
+            element.Id = newId;
+            ElementsOnWorkSpace.Add(newId, element);
+            NewScreenElementAdded(null, new ScreenElementEventArgs() {Element = element});
+        }
+
+        public void ReplaceExistingElement(ScreenElement element)
+        {
+            if (ElementsOnWorkSpace.ContainsKey(element.Id))
+            {
+                var oldElement = ElementsOnWorkSpace[element.Id];
+                ElementsOnWorkSpace.Remove(element.Id);
+                ElementsOnWorkSpace.Add(element.Id, element);
+                ScreenElementReplaced(null, new ReplacingElementEventArgs() { OldElement = oldElement, NewElement = element });
+            }
+            else
+            {
+                throw new InvalidOperationException($"Replacing error! Element with ID {element.Id} doesn't exist on WorkSpace!");
+            }
+
         }
 
         public event PropertyChangedEventHandler PropertyChanged;
