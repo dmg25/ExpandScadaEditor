@@ -17,7 +17,7 @@ using ExpandScadaEditor.ScreenEditor.WorkspaceHelperControls;
 
 namespace ExpandScadaEditor.ScreenEditor.Items
 {
-    public class ScreenElement : UserControl, ICloneable
+    public class ScreenElement : UserControl
     {
         public const string RESIZE_BORDER_NAME = "RESIZE_BORDER";
         public const string COVER_BORDER_NAME = "COVER_BORDER";
@@ -148,6 +148,21 @@ namespace ExpandScadaEditor.ScreenEditor.Items
             MouseEnter += ScreenElement_MouseEnter;
             MouseLeave += ScreenElement_MouseLeave;
         }
+
+        public void InitializeFromAnotherElement(ScreenElement element)
+        {
+            // TODO Expand this method if add new category of settings/ settig
+
+            // TODO!!! These settings must be united to collections in future!!!
+            id = element.id;
+            coordX = element.coordX;
+            coordY = element.coordY;
+            
+            Width = element.IsLoaded ? element.ActualWidth : element.Width;
+            Height = element.IsLoaded ? element.ActualHeight : element.Height;
+            Name = element.Name;
+        }
+
 
         private void ScreenElement_MouseLeave(object sender, MouseEventArgs e)
         {
@@ -353,11 +368,6 @@ namespace ExpandScadaEditor.ScreenEditor.Items
             e.Handled = true;
         }
 
-
-        public object Clone()
-        {
-            return this.MemberwiseClone();
-        }
 
     }
 }

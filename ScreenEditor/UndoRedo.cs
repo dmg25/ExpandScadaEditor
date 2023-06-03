@@ -15,37 +15,65 @@ namespace ExpandScadaEditor.ScreenEditor
         public void NewUserAction(List<ScreenElement> changedElements)
         {
             List<ScreenElement> clonedElements = new List<ScreenElement>();
-            changedElements.ForEach(x => clonedElements.Add((ScreenElement)x.Clone()));
+            foreach (var element in changedElements)
+            {
+                var type = element.GetType();
+                var newItem = (ScreenElement)Activator.CreateInstance(type);
+                newItem.InitializeFromAnotherElement(element);
+                clonedElements.Add(newItem);
+            }
+
             UndoCollection.Push(clonedElements);
             RedoCollection.Clear();
+
+            //changedElements.ForEach(x => clonedElements.Add((ScreenElement)x.Clone()));
+            //UndoCollection.Push(clonedElements);
+            //RedoCollection.Clear();
         }
 
         public void NewUserAction(ScreenElement changedElement)
         {
-            UndoCollection.Push(new List<ScreenElement>() { (ScreenElement)changedElement.Clone() });
+            var type = changedElement.GetType();
+            var newItem = (ScreenElement)Activator.CreateInstance(type);
+            newItem.InitializeFromAnotherElement(changedElement);
+            UndoCollection.Push(new List<ScreenElement>() { newItem });
             RedoCollection.Clear();
+
+            //UndoCollection.Push(new List<ScreenElement>() { (ScreenElement)changedElement.Clone() });
+            //RedoCollection.Clear();
         }
 
         public List<ScreenElement> Undo()
         {
-            RedoCollection.Push(UndoCollection.Peek());
-            return UndoCollection.Pop();
+            RedoCollection.Push(UndoCollection.Pop());
+
+            var elementsToReturn = UndoCollection.Peek();
+            List<ScreenElement> clonedElements = new List<ScreenElement>();
+            foreach (var element in elementsToReturn)
+            {
+                var type = element.GetType();
+                var newItem = (ScreenElement)Activator.CreateInstance(type);
+                newItem.InitializeFromAnotherElement(element);
+                clonedElements.Add(newItem);
+            }
+
+            return clonedElements;
         }
 
         public List<ScreenElement> Redo()
         {
-            UndoCollection.Push(RedoCollection.Peek());
-            return RedoCollection.Pop();
+            UndoCollection.Push(RedoCollection.Pop());
+            return RedoCollection.Peek();
         }
 
         public bool UndoIsPossible()
         {
-            return UndoCollection.Count != 0;
+            return UndoCollection.Count > 1;
         }
 
         public bool RedoIsPossible()
         {
-            return RedoCollection.Count != 0;
+            return RedoCollection.Count > 0;
         }
     }
 }

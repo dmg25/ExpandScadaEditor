@@ -168,59 +168,27 @@ namespace ExpandScadaEditor.ScreenEditor
             VM.ScreenElementReplaced += VM_ScreenElementReplaced;
             VM.Initialize();
 
-            // Put all elements on the workplace
-            //foreach (var pair in VM.ElementsOnWorkSpace)
-            //{
-            //    WorkSpace.Children.Add(pair.Value);
-            //    Canvas.SetLeft(pair.Value, pair.Value.CoordX);
-            //    Canvas.SetTop(pair.Value, pair.Value.CoordY);
-            //    pair.Value.MouseLeftButtonDown += Element_MouseLeftButtonDown;
-            //    pair.Value.MouseLeftButtonUp += Element_MouseLeftButtonUp;
-            //    pair.Value.OnElementResizing += Element_OnElementResizing;
-            //}
-
             WorkSpace.MouseLeftButtonDown += WorkSpace_MouseLeftButtonDown;
             WorkSpace.MouseLeftButtonUp += WorkSpace_MouseLeftButtonUp;
 
-            
+            // Here we have to save original state of this workspace. Opened new or loaded - here must be first point
+            VM.UndoRedo.NewUserAction(VM.ElementsOnWorkSpace.Values.ToList());
         }
-
-
-        //private void ClearViewPort()
-        //{
-        //    ModelVisual3D viewPortChildLocal;
-        //    for (int i = WorkSpace.Children.Count - 1; i >= 0; i--)
-        //    {
-        //        viewPortChildLocal = (ModelVisual3D)WorkSpace.Children[i];
-        //        if (viewPortChildLocal.Content is DirectionalLight == false)
-        //        {
-        //            WorkSpace.Children.RemoveAt(i);
-        //        }
-        //    }
-        //}
-
 
         private void VM_ScreenElementReplaced(object sender, ReplacingElementEventArgs e)
         {
-            WorkSpace.Children.Remove(e.OldElement);
+             //STUPID!!! Now Undo works like you save in the stack elements AFTER user's action, but it must be BEFORE!!!
 
-
-            var parent = VisualTreeHelper.GetParent(e.NewElement);
-            WorkSpace.Children.Remove(e.NewElement);
-            WorkSpace.Children.Add(e.NewElement);
-
-
-
-
-
-
-
-            //if (e.OldElement != null)
-            //{
-            //    WorkSpace.Children.Remove(e.OldElement);
-            //    e.OldElement = null;
-            //}
-            //VM_NewScreenElementAdded(null, new ScreenElementEventArgs() { Element = e.NewElement });
+            if (e.OldElement != null)
+            {
+                e.OldElement.MouseLeftButtonDown -= Element_MouseLeftButtonDown;
+                e.OldElement.MouseLeftButtonUp -= Element_MouseLeftButtonUp;
+                e.OldElement.OnElementResizing -= Element_OnElementResizing;
+                e.OldElement.ElementResized -= Element_ElementResized;
+                WorkSpace.Children.Remove(e.OldElement);
+                e.OldElement = null;
+            }
+            VM_NewScreenElementAdded(null, new ScreenElementEventArgs() { Element = e.NewElement });
         }
 
         private void VM_NewScreenElementAdded(object sender, ScreenElementEventArgs e)
