@@ -36,7 +36,7 @@
                 </ToolBar.Background>
 
                 <Button Content="Undo" Command="{Binding Undo}" />
-                <Button Content="Redo" />
+                <Button Content="Redo" Command="{Binding Redo}"/>
 
             </ToolBar>
             

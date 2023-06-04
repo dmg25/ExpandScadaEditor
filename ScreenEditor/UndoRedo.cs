@@ -62,8 +62,8 @@ namespace ExpandScadaEditor.ScreenEditor
 
         public List<ScreenElement> Redo()
         {
-            UndoCollection.Push(RedoCollection.Pop());
-            return RedoCollection.Peek();
+            UndoCollection.Push(RedoCollection.Peek());
+            return RedoCollection.Pop();
         }
 
         public bool UndoIsPossible()

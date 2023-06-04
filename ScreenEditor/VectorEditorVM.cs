@@ -143,7 +143,34 @@ namespace ExpandScadaEditor.ScreenEditor
 
 
 
+        private Command _redo;
+        public Command Redo
+        {
+            get
+            {
+                return _redo ??
+                    (_redo = new Command(obj =>
+                    {
+                        var redoElements = UndoRedo.Redo();
 
+                        foreach (var element in redoElements)
+                        {
+                            if (ElementsOnWorkSpace.ContainsKey(element.Id))
+                            {
+                                ReplaceExistingElement(element);
+                            }
+                            else
+                            {
+                                AddNewScreenElement(element);
+                            }
+                        }
+                    },
+                    obj =>
+                    {
+                        return UndoRedo.RedoIsPossible();
+                    }));
+            }
+        }
 
 
 
