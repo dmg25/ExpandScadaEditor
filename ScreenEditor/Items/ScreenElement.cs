@@ -17,13 +17,28 @@ using ExpandScadaEditor.ScreenEditor.WorkspaceHelperControls;
 
 namespace ExpandScadaEditor.ScreenEditor.Items
 {
+    /*  Events for user's actions
+     *      Manual events - ALL GROUP EVENTS
+     *          + Resizing (grioup of parameters) 
+     *          - Paste/Create (group)
+     *          - Delete (group)
+     *          - Move (for whole group only)
+     *          --> Invoke these events in view directly
+     *          
+     *      Auto events - All events from Settings panel, but hold on now, because there is no structure yet
+     *          - Change of color, text,... any property changed (by mouse or on settings panel)
+     *          --> invoke automatically with NotifyChanged interfase
+     *              BUT! we have check if some properties were done by mouse (resizing moving only), 
+     *              in this case ignore them for UndoRedo operation
+     * */
+
     public class ScreenElement : UserControl
     {
         public const string RESIZE_BORDER_NAME = "RESIZE_BORDER";
         public const string COVER_BORDER_NAME = "COVER_BORDER";
 
         public event EventHandler<ResizingEventArgs> OnElementResizing;
-        public event EventHandler ElementResized;
+        public event EventHandler ElementSizeChanged;
 
         private int id;
         public int Id
@@ -358,7 +373,7 @@ namespace ExpandScadaEditor.ScreenEditor.Items
             var shape = sender as Shape;
             shape.ReleaseMouseCapture();
             e.Handled = true;
-            ElementResized(this, new EventArgs());
+            ElementSizeChanged(this, new EventArgs());
         }
 
         private void Resizing_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)

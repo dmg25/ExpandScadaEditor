@@ -90,7 +90,7 @@ namespace ExpandScadaEditor.ScreenEditor
      *      
      *      CREATE ZOOM FUNCTIONS: TOOLS/MOUSE WHEEL + CTRL...
      *      
-     *      UNDO/REDO user's action
+     *   +++UNDO/REDO user's action
      *      
      *      ADD ICON FOR ROTATION
      *      
@@ -184,7 +184,7 @@ namespace ExpandScadaEditor.ScreenEditor
                 e.OldElement.MouseLeftButtonDown -= Element_MouseLeftButtonDown;
                 e.OldElement.MouseLeftButtonUp -= Element_MouseLeftButtonUp;
                 e.OldElement.OnElementResizing -= Element_OnElementResizing;
-                e.OldElement.ElementResized -= Element_ElementResized;
+                e.OldElement.ElementSizeChanged -= Element_ElementResized;
                 WorkSpace.Children.Remove(e.OldElement);
                 e.OldElement = null;
             }
@@ -199,7 +199,7 @@ namespace ExpandScadaEditor.ScreenEditor
             e.Element.MouseLeftButtonDown += Element_MouseLeftButtonDown;
             e.Element.MouseLeftButtonUp += Element_MouseLeftButtonUp;
             e.Element.OnElementResizing += Element_OnElementResizing;
-            e.Element.ElementResized += Element_ElementResized;
+            e.Element.ElementSizeChanged += Element_ElementResized;
         }
 
         private void Element_ElementResized(object sender, EventArgs e)
@@ -292,9 +292,16 @@ namespace ExpandScadaEditor.ScreenEditor
                 DeselectAllElements();
                 SelectElement(element);
             }
+            else
+            {
+                // At the end of the moving - invoke new user action for undoredo
+                VM.UndoRedo.NewUserAction(SelectedElements);
+            }
 
             elementsWereMoved = false;
             selectedElementIndexByMouse = -1;
+
+            
         }
 
         DataTemplate CreateTemplateByName(Type viewType)
