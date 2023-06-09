@@ -34,12 +34,27 @@ namespace ExpandScadaEditor.ScreenEditor
         public UndoRedoContainer UndoRedo = new UndoRedoContainer();
 
         public event EventHandler<ScreenElementEventArgs> NewScreenElementAdded;
+        public event EventHandler<ScreenElementEventArgs> ScreenElementDeleted;
         public event EventHandler<ReplacingElementEventArgs> ScreenElementReplaced;
-        
 
-        private List<BasicVectorItemVM> items = new List<BasicVectorItemVM>();
-        public List<BasicVectorItemVM> Items 
-        { 
+
+        //private List<BasicVectorItemVM> items = new List<BasicVectorItemVM>();
+        //public List<BasicVectorItemVM> Items 
+        //{ 
+        //    get
+        //    {
+        //        return items;
+        //    }
+        //    set
+        //    {
+        //        items = value;
+        //        NotifyPropertyChanged();
+        //    }
+        //}
+
+        private List<ScreenElement> items = new List<ScreenElement>();
+        public List<ScreenElement> Items
+        {
             get
             {
                 return items;
@@ -122,11 +137,18 @@ namespace ExpandScadaEditor.ScreenEditor
                     {
                         var undoElements = UndoRedo.Undo();
 
-                        foreach (var element in undoElements)
+                        foreach (var element in undoElements.elements)
                         {
                             if (ElementsOnWorkSpace.ContainsKey(element.Id))
                             {
-                                ReplaceExistingElement(element);
+                                if (undoElements.werePasted)
+                                {
+                                    DeleteElement(element);
+                                }
+                                else
+                                {
+                                    ReplaceExistingElement(element);
+                                }
                             }
                             else
                             {
@@ -153,10 +175,17 @@ namespace ExpandScadaEditor.ScreenEditor
                     {
                         var redoElements = UndoRedo.Redo();
 
-                        foreach (var element in redoElements)
+                        foreach (var element in redoElements.elements)
                         {
+                            if (redoElements.werePasted)
+                            {
+                                AddNewScreenElement(element,true);
+                                return;
+                            }
+
                             if (ElementsOnWorkSpace.ContainsKey(element.Id))
                             {
+
                                 ReplaceExistingElement(element);
                             }
                             else
@@ -190,24 +219,39 @@ namespace ExpandScadaEditor.ScreenEditor
         public void Initialize()
         {
             // tests!
-            Items.Add(new TestItem1VM());
-            Items.Add(new TestItem1VM());
-            Items.Add(new TestItem2VM());
-            Items.Add(new TestItem2VM());
+            //Items.Add(new TestItem2VM());
+            //Items.Add(new TestItem2VM());
+
+            Items.Add(new TestItem2());
+            Items.Add(new TestItem2());
 
 
             // Create/Load elements VM must be created automatically for each
             // TODO move it to loading process or smth
-            AddNewScreenElement(new TestItem2() { CoordX = 10, CoordY = 20, Name = "first", Width = 50, Height = 50 });
-            AddNewScreenElement(new TestItem2() { CoordX = 100, CoordY = 100, Name = "second", Width = 50, Height = 50 });
-            AddNewScreenElement(new TestItem2() { CoordX = 100, CoordY = 200, Name = "third", Width = 50, Height = 50 });
+            AddNewScreenElement(new TestItem2() { CoordX = 10, CoordY = 20, Name = "first"});
+            AddNewScreenElement(new TestItem2() { CoordX = 100, CoordY = 100, Name = "second" });
+            AddNewScreenElement(new TestItem2() { CoordX = 100, CoordY = 200, Name = "third"});
         }
 
-        public void AddNewScreenElement(ScreenElement element)
+        public void AddNewScreenElement(ScreenElement element, bool useOldId = false)
         {
-            int newId = idForNewScreenElement++;
-            element.Id = newId;
-            ElementsOnWorkSpace.Add(newId, element);
+            if (!useOldId)
+            {
+                int newId = idForNewScreenElement++;
+                element.Id = newId;
+
+                if (string.IsNullOrWhiteSpace(element.Name) || string.IsNullOrEmpty(element.Name))
+                {
+                    element.Name = $"element_{element.Id}";
+                }
+                ElementsOnWorkSpace.Add(newId, element);
+            }
+            else
+            {
+                ElementsOnWorkSpace.Add(element.Id, element);
+            }
+            
+            
             NewScreenElementAdded(null, new ScreenElementEventArgs() {Element = element});
         }
 
@@ -225,6 +269,21 @@ namespace ExpandScadaEditor.ScreenEditor
                 throw new InvalidOperationException($"Replacing error! Element with ID {element.Id} doesn't exist on WorkSpace!");
             }
 
+        }
+
+        public void DeleteElement(ScreenElement element)
+        {
+            if (ElementsOnWorkSpace.ContainsKey(element.Id))
+            {
+                var elementOnWorkspace = ElementsOnWorkSpace[element.Id];
+                ElementsOnWorkSpace.Remove(element.Id);
+                
+                ScreenElementDeleted(null, new ScreenElementEventArgs() { Element = elementOnWorkspace });
+            }
+            else
+            {
+                throw new InvalidOperationException($"Deleting error! Element with ID {element.Id} doesn't exist on WorkSpace!");
+            }
         }
 
         public event PropertyChangedEventHandler PropertyChanged;

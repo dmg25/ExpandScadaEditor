@@ -53,6 +53,19 @@ namespace ExpandScadaEditor.ScreenEditor.Items
             }
         }
 
+        //private bool toDelete;
+        //public bool ToDelete
+        //{
+        //    get
+        //    {
+        //        return toDelete;
+        //    }
+        //    set
+        //    {
+        //        toDelete = value;
+        //    }
+        //}
+
         private double coordX;
         public double CoordX
         {
@@ -176,6 +189,8 @@ namespace ExpandScadaEditor.ScreenEditor.Items
             Width = element.IsLoaded ? element.ActualWidth : element.Width;
             Height = element.IsLoaded ? element.ActualHeight : element.Height;
             Name = element.Name;
+           // ToDelete = element.ToDelete;
+            
         }
 
 

@@ -9,6 +9,8 @@ namespace ExpandScadaEditor.ScreenEditor.Items
 {
     public class TestItem2VM : BasicVectorItemVM
     {
+
+
         public TestItem2VM() : base()
         {
 

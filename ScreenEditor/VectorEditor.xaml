@@ -14,11 +14,11 @@
     </UserControl.Resources>
     <Grid DataContext="{StaticResource ViewModel}">
         <Grid.ColumnDefinitions>
-            <ColumnDefinition MinWidth="50" />
+            <ColumnDefinition MinWidth="50" Width="100" />
             <ColumnDefinition Width="Auto" />
             <ColumnDefinition />
             <ColumnDefinition Width="Auto" />
-            <ColumnDefinition MinWidth="50"/>
+            <ColumnDefinition MinWidth="50" Width="200"/>
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
             <RowDefinition Height="25"/>
@@ -43,11 +43,25 @@
             
         </ToolBarTray>
 
-        <ListView Grid.Column="0" Grid.Row="1"
+        <ListView x:Name="ElementCatalog" Grid.Column="0" Grid.Row="1"
                 ItemsSource="{Binding Items}" 
-                ItemTemplateSelector="{StaticResource ItemsTemplateSelector}">  <!--ItemTemplateSelector="{DynamicResource ItemsTemplateSelector}"-->
-                
+                >
+            <ListView.ItemContainerStyle>
+                <Style TargetType="ListViewItem">
+                    <EventSetter Event="PreviewMouseLeftButtonDown" Handler="ListViewItem_PreviewMouseLeftButtonDown" />
+                </Style>
+            </ListView.ItemContainerStyle>
         </ListView>
+        
+        <!--<ListView x:Name="ElementCatalog" Grid.Column="0" Grid.Row="1"
+                ItemsSource="{Binding Items}" 
+                ItemTemplateSelector="{StaticResource ItemsTemplateSelector}" >
+            <ListView.ItemContainerStyle>
+                <Style TargetType="ListViewItem">
+                    <EventSetter Event="PreviewMouseLeftButtonDown" Handler="ListViewItem_PreviewMouseLeftButtonDown" />
+                </Style>
+            </ListView.ItemContainerStyle>
+        </ListView>-->
 
         <GridSplitter Grid.Column="1" Grid.Row="1"
               HorizontalAlignment="Center"

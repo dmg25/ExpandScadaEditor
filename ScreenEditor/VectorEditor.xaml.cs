@@ -53,7 +53,13 @@ namespace ExpandScadaEditor.ScreenEditor
      *                  - if there is postfix - increase it
      *              - check if pasting coordinates are not out of border. If new coord bigger then border - set elements at border
      *              
-     *              
+     *   ###CREATE/DELETE ELEMENT     
+     *          - Create element
+     *              - User must press on the element on the catalog and move it to workspace
+     *              - during the moving show opacitiezed element following the cursor
+     *                  - We can crete new element and move it aside of cursor with opacity above the catalog
+     *                  - then listen mouse up event on WP and if it was - create new element and finish operation
+     *              - if user drop it on workspace - add element as new one on WP. If dropped to another place - ignore and delete
      *              
      *      
      *   +++SELECT ONE ELEMENT AND SHOW BORDER FOR RESIZING
@@ -146,7 +152,8 @@ namespace ExpandScadaEditor.ScreenEditor
 
         ElementsSelectingBorder borderSelecting;
 
-        
+        ScreenElement elementFromCaltalog;
+        bool elementFromCatalogMoved = false;
 
         public VectorEditor()
         {
@@ -166,6 +173,7 @@ namespace ExpandScadaEditor.ScreenEditor
 
             VM.NewScreenElementAdded += VM_NewScreenElementAdded;
             VM.ScreenElementReplaced += VM_ScreenElementReplaced;
+            VM.ScreenElementDeleted += VM_ScreenElementDeleted;
             VM.Initialize();
 
             WorkSpace.MouseLeftButtonDown += WorkSpace_MouseLeftButtonDown;
@@ -173,12 +181,76 @@ namespace ExpandScadaEditor.ScreenEditor
 
             // Here we have to save original state of this workspace. Opened new or loaded - here must be first point
             VM.UndoRedo.NewUserAction(VM.ElementsOnWorkSpace.Values.ToList());
+
+            // events for creating element 
+            //ElementCatalog.PreviewMouseLeftButtonDown += ElementCatalog_MouseLeftButtonDown;
+            ElementCatalog.MouseLeftButtonUp += ElementCatalog_MouseLeftButtonUp;
+            ElementCatalog.MouseMove += ElementCatalog_MouseMove;
+
+        }
+
+        private void VM_ScreenElementDeleted(object sender, ScreenElementEventArgs e)
+        {
+            e.Element.MouseLeftButtonDown -= Element_MouseLeftButtonDown;
+            e.Element.MouseLeftButtonUp -= Element_MouseLeftButtonUp;
+            e.Element.OnElementResizing -= Element_OnElementResizing;
+            e.Element.ElementSizeChanged -= Element_ElementResized;
+
+            //WorkSpace.Children.Remove(WorkSpace.Children.fir);
+
+            WorkSpace.Children.Remove(e.Element);
+            e.Element = null;
+        }
+
+        private void ElementCatalog_MouseMove(object sender, MouseEventArgs e)
+        {
+            // check if left button pressed - and we have instance of pressed element
+            // mark that it was a moving
+            // take created instance and show it near by cursor with opacity and redraw it every time
+
+
+            //elementFromCatalogMoved = true;
+
+
+        }
+
+        private void ElementCatalog_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+        {
+            // check if there is created instance and was moving or not. If was - just cancel everything.
+            // if not - create new element on workspace on center above every other element ()
+            //      check if there is element on this coordinates. If yes - move +10px and check till place will be free - paste element
+
+            if (elementFromCaltalog is not null)
+            {
+                //!!!generate new name/id !!!
+                // find current center of workspace coordinates
+                // check if any element has same coordinates -place or move a little, do not forhet about border of workspace
+                //set only properties on element
+
+                var position = FindPlaceForNewElement(elementFromCaltalog);
+                elementFromCaltalog.CoordX = position.x;
+                elementFromCaltalog.CoordY = position.y;
+
+                VM.AddNewScreenElement(elementFromCaltalog);
+                VM.UndoRedo.NewUserAction(elementFromCaltalog, true);
+            }
+
+
+
+        }
+
+        private void ListViewItem_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            var item = sender as ListViewItem;
+            if (item != null)
+            {
+                var element = item.Content as ScreenElement;
+                elementFromCaltalog = (ScreenElement)Activator.CreateInstance(element.GetType());
+            }
         }
 
         private void VM_ScreenElementReplaced(object sender, ReplacingElementEventArgs e)
         {
-             //STUPID!!! Now Undo works like you save in the stack elements AFTER user's action, but it must be BEFORE!!!
-
             if (e.OldElement != null)
             {
                 e.OldElement.MouseLeftButtonDown -= Element_MouseLeftButtonDown;
@@ -542,6 +614,55 @@ namespace ExpandScadaEditor.ScreenEditor
 
             SelectedElements.Clear();
         }
+
+
+
+
+        (double x, double y) FindPlaceForNewElement(ScreenElement element)
+        {
+            double centerX = WorkSpace.ActualWidth / 2;
+            double centerY = WorkSpace.ActualHeight / 2;
+
+            bool endX = false;
+            bool endY = false;
+
+            while (!endX || !endY)
+            {
+                var elementInCenter = VM.ElementsOnWorkSpace.Values.FirstOrDefault(x => x.CoordX >= centerX - 1 && x.CoordX <= centerX + 1 && x.CoordY >= centerY - 1 && x.CoordY <= centerY + 1);
+
+                if (elementInCenter is null)
+                {
+                    return (centerX, centerY);
+                }
+                else
+                {
+                    double newCenterX = centerX + 10;
+                    double newCenterY = centerY + 10;
+
+                    if (newCenterX + element.Width >= WorkSpace.ActualWidth)
+                    {
+                        newCenterX = WorkSpace.ActualWidth - element.Width;
+                        endX = true;
+                    }
+
+                    if (newCenterY + element.Height >= WorkSpace.ActualHeight)
+                    {
+                        newCenterY = WorkSpace.ActualHeight - element.Height;
+                        endY = true;
+                    }
+
+                    centerX = newCenterX < 0 ? 0 : newCenterX;
+                    centerY = newCenterY < 0 ? 0 : newCenterY;
+                }
+            }
+
+            return (centerX, centerY);
+
+        }
+
+
+
+
 
     }
 
