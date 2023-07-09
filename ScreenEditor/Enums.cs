@@ -6,6 +6,14 @@ using System.Threading.Tasks;
 
 namespace ExpandScadaEditor.ScreenEditor
 {
+    public enum UndoRedoActionType
+    {
+        Base,
+        Replace,
+        Create,
+        Delete
+    }
+
     public enum MouseMovingMode
     {
         None,

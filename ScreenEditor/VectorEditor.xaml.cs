@@ -143,7 +143,7 @@ namespace ExpandScadaEditor.ScreenEditor
 
         //Dictionary<string, ScreenElement> SelectedElements = new Dictionary<string, ScreenElement>();
 
-        List<ScreenElement> SelectedElements = new List<ScreenElement>();
+        //List<ScreenElement> SelectedElements = new List<ScreenElement>();
         int selectedElementIndexByMouse = -1;
 
         double SelectedElementMousePressedCoordX { get; set; }
@@ -174,13 +174,17 @@ namespace ExpandScadaEditor.ScreenEditor
             VM.NewScreenElementAdded += VM_NewScreenElementAdded;
             VM.ScreenElementReplaced += VM_ScreenElementReplaced;
             VM.ScreenElementDeleted += VM_ScreenElementDeleted;
+            VM.SelectedElementsDeleted += VM_SelectedElementsDeleted;
             VM.Initialize();
 
             WorkSpace.MouseLeftButtonDown += WorkSpace_MouseLeftButtonDown;
             WorkSpace.MouseLeftButtonUp += WorkSpace_MouseLeftButtonUp;
 
+            //this.KeyDown += WorkSpace_PreviewKeyDown;
+
             // Here we have to save original state of this workspace. Opened new or loaded - here must be first point
-            VM.UndoRedo.NewUserAction(VM.ElementsOnWorkSpace.Values.ToList());
+            VM.UndoRedo.BasicUserAction(VM.ElementsOnWorkSpace.Values.ToList());
+            //VM.UndoRedo.NewUserAction(VM.ElementsOnWorkSpace.Values.ToList());
 
             // events for creating element 
             //ElementCatalog.PreviewMouseLeftButtonDown += ElementCatalog_MouseLeftButtonDown;
@@ -189,10 +193,28 @@ namespace ExpandScadaEditor.ScreenEditor
 
         }
 
+        private void VM_SelectedElementsDeleted(object sender, EventArgs e)
+        {
+            var selectedElementsTmp = VM.SelectedElements.ToList();
+            DeselectAllElements();
+            selectedElementsTmp.ForEach(x => VM_ScreenElementDeleted(null, new ScreenElementEventArgs() { Element = x }));
+        }
+
+        //private void WorkSpace_PreviewKeyDown(object sender, KeyEventArgs e)
+        //{
+        //     delete this event and use button on tooltab and command
+        //     delete element, create and check new user action
+        //    if (e.Key == Key.Delete && SelectedElements.Count != 0)
+        //    {
+        //         SelectedElements.ForEach(x => VM_ScreenElementDeleted(null, new ScreenElementEventArgs() { Element = x }));
+        //    }
+        //}
+
         private void VM_ScreenElementDeleted(object sender, ScreenElementEventArgs e)
         {
             e.Element.MouseLeftButtonDown -= Element_MouseLeftButtonDown;
             e.Element.MouseLeftButtonUp -= Element_MouseLeftButtonUp;
+
             e.Element.OnElementResizing -= Element_OnElementResizing;
             e.Element.ElementSizeChanged -= Element_ElementResized;
 
@@ -232,7 +254,7 @@ namespace ExpandScadaEditor.ScreenEditor
                 elementFromCaltalog.CoordY = position.y;
 
                 VM.AddNewScreenElement(elementFromCaltalog);
-                VM.UndoRedo.NewUserAction(elementFromCaltalog, true);
+                VM.UndoRedo.NewUserAction(VM.ElementsOnWorkSpace, UndoRedoActionType.Create);
             }
 
 
@@ -276,7 +298,8 @@ namespace ExpandScadaEditor.ScreenEditor
 
         private void Element_ElementResized(object sender, EventArgs e)
         {
-            VM.UndoRedo.NewUserAction(sender as ScreenElement);
+            VM.UndoRedo.NewUserAction(VM.ElementsOnWorkSpace);
+           // VM.UndoRedo.NewUserAction(sender as ScreenElement);
         }
 
         private void Element_OnElementResizing(object sender, ResizingEventArgs e)
@@ -340,7 +363,7 @@ namespace ExpandScadaEditor.ScreenEditor
 
             var element = sender as ScreenElement;
 
-            if (!SelectedElements.Contains(element))
+            if (!VM.SelectedElements.Contains(element))
             {
                 DeselectAllElements();
                 SelectElement(element);
@@ -350,7 +373,7 @@ namespace ExpandScadaEditor.ScreenEditor
             var mousePosition = e.GetPosition(element);
             SelectedElementMousePressedCoordX = mousePosition.X;
             SelectedElementMousePressedCoordY = mousePosition.Y;
-            selectedElementIndexByMouse = SelectedElements.IndexOf(element);
+            selectedElementIndexByMouse = VM.SelectedElements.IndexOf(element);
 
         }
 
@@ -367,7 +390,8 @@ namespace ExpandScadaEditor.ScreenEditor
             else
             {
                 // At the end of the moving - invoke new user action for undoredo
-                VM.UndoRedo.NewUserAction(SelectedElements);
+                VM.UndoRedo.NewUserAction(VM.ElementsOnWorkSpace);
+                //VM.UndoRedo.NewUserAction(VM.SelectedElements);
             }
 
             elementsWereMoved = false;
@@ -409,7 +433,7 @@ namespace ExpandScadaEditor.ScreenEditor
             {
                 CurrentMouseMovingMode = MouseMovingMode.Selecting;
             }
-            else if(e.LeftButton == MouseButtonState.Pressed && SelectedElements.Count != 0 /*&& elementsOnWorkSpace.ContainsKey(SelectedElement.Name)*/)
+            else if(e.LeftButton == MouseButtonState.Pressed && VM.SelectedElements.Count != 0 /*&& elementsOnWorkSpace.ContainsKey(SelectedElement.Name)*/)
             {
                 CurrentMouseMovingMode = MouseMovingMode.MoveSelectedElements;
             }           
@@ -439,8 +463,8 @@ namespace ExpandScadaEditor.ScreenEditor
                         return;
                     }
 
-                    double offsetX = newPositionX - SelectedElements[selectedElementIndexByMouse].CoordX;
-                    double offsetY = newPositionY - SelectedElements[selectedElementIndexByMouse].CoordY;
+                    double offsetX = newPositionX - VM.SelectedElements[selectedElementIndexByMouse].CoordX;
+                    double offsetY = newPositionY - VM.SelectedElements[selectedElementIndexByMouse].CoordY;
 
                     // calculate offset for pressed element for new coordinates
                     // use this offset for each selected element - calculate new coordinates
@@ -448,7 +472,7 @@ namespace ExpandScadaEditor.ScreenEditor
 
                     // check for each element the border of workspace. If border reached - break
                     // we can move one element a little off the board, but if there is a group - nonono
-                    if (SelectedElements.Count == 1)
+                    if (VM.SelectedElements.Count == 1)
                     {
                         if (currentPosition.X >= WorkSpace.ActualWidth || currentPosition.X <= 0
                            || currentPosition.Y >= WorkSpace.ActualHeight || currentPosition.Y <= 0)
@@ -458,7 +482,7 @@ namespace ExpandScadaEditor.ScreenEditor
                     }
                     else
                     {
-                        foreach (var element in SelectedElements)
+                        foreach (var element in VM.SelectedElements)
                         {
                             if (element.CoordX + offsetX + element.ActualWidth >= WorkSpace.ActualWidth
                                 || element.CoordY + offsetY + element.ActualHeight >= WorkSpace.ActualHeight
@@ -471,7 +495,7 @@ namespace ExpandScadaEditor.ScreenEditor
 
 
                     // set new coordinates for each element
-                    foreach (var element in SelectedElements)
+                    foreach (var element in VM.SelectedElements)
                     {
                         element.CoordX += offsetX;
                         element.CoordY += offsetY;
@@ -528,14 +552,14 @@ namespace ExpandScadaEditor.ScreenEditor
                         if (selectRect1.X <= elementRect1.X && selectRect1.Y <= elementRect1.Y
                             && selectRect2.X >= elementRect2.X && selectRect2.Y >= elementRect2.Y)
                         {
-                            if (!SelectedElements.Contains(element.Value))
+                            if (!VM.SelectedElements.Contains(element.Value))
                             {
                                 SelectElement(element.Value);
                             }
                         }
                         else
                         {
-                            if (SelectedElements.Contains(element.Value))
+                            if (VM.SelectedElements.Contains(element.Value))
                             {
                                 DeselectOneElement(element.Value);
                             }
@@ -555,14 +579,14 @@ namespace ExpandScadaEditor.ScreenEditor
                         if (selectRect2.X >= elementRect1.X && selectRect2.Y >= elementRect1.Y &&
                             selectRect1.X <= elementRect2.X && selectRect1.Y <= elementRect2.Y)
                         {
-                            if (!SelectedElements.Contains(element.Value))
+                            if (!VM.SelectedElements.Contains(element.Value))
                             {
                                 SelectElement(element.Value);
                             }
                         }
                         else
                         {
-                            if (SelectedElements.Contains(element.Value))
+                            if (VM.SelectedElements.Contains(element.Value))
                             {
                                 DeselectOneElement(element.Value);
                             }
@@ -581,7 +605,7 @@ namespace ExpandScadaEditor.ScreenEditor
         void SelectElement(ScreenElement element)
         {
             // add to the dictionaly and add border around
-            SelectedElements.Add(element);
+            VM.SelectedElements.Add(element);
             element.ShowResizeBorder();
         }
 
@@ -593,12 +617,12 @@ namespace ExpandScadaEditor.ScreenEditor
             // remove this element from the list
             // create version for string as argument?
 
-            if (!SelectedElements.Contains(element))
+            if (!VM.SelectedElements.Contains(element))
             {
                 return;
             }
 
-            SelectedElements.Remove(element);
+            VM.SelectedElements.Remove(element);
             element.HideResizeBorder();
         }
 
@@ -607,12 +631,12 @@ namespace ExpandScadaEditor.ScreenEditor
         {
             // find and delete all borders for each element and clean the dictionary
 
-            foreach (var element in SelectedElements)
+            foreach (var element in VM.SelectedElements)
             {
                 element.HideResizeBorder();
             }
 
-            SelectedElements.Clear();
+            VM.SelectedElements.Clear();
         }
 
 

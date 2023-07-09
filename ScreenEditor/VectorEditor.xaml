@@ -37,7 +37,7 @@
 
                 <Button Content="Undo" Command="{Binding Undo}" />
                 <Button Content="Redo" Command="{Binding Redo}"/>
-
+                <Button Content="Del" Command="{Binding Delete}"/>
             </ToolBar>
             
             

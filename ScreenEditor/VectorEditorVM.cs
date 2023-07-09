@@ -30,13 +30,14 @@ namespace ExpandScadaEditor.ScreenEditor
          *          - just method "add user action"
          * */
 
-
         public UndoRedoContainer UndoRedo = new UndoRedoContainer();
 
         public event EventHandler<ScreenElementEventArgs> NewScreenElementAdded;
         public event EventHandler<ScreenElementEventArgs> ScreenElementDeleted;
+        public event EventHandler SelectedElementsDeleted;
         public event EventHandler<ReplacingElementEventArgs> ScreenElementReplaced;
 
+        internal List<ScreenElement> SelectedElements = new List<ScreenElement>();
 
         //private List<BasicVectorItemVM> items = new List<BasicVectorItemVM>();
         //public List<BasicVectorItemVM> Items 
@@ -135,26 +136,51 @@ namespace ExpandScadaEditor.ScreenEditor
                 return _undo ??
                     (_undo = new Command(obj =>
                     {
+                        // check which action type it was. Create/Delete must be vv.
                         var undoElements = UndoRedo.Undo();
 
-                        foreach (var element in undoElements.elements)
+                        switch (undoElements.actionType)
                         {
-                            if (ElementsOnWorkSpace.ContainsKey(element.Id))
-                            {
-                                if (undoElements.werePasted)
+                            case UndoRedoActionType.Base:
+                                foreach (var pair in ElementsOnWorkSpace)
                                 {
-                                    DeleteElement(element);
+                                    DeleteElement(pair.Value);
                                 }
-                                else
-                                {
-                                    ReplaceExistingElement(element);
-                                }
-                            }
-                            else
-                            {
-                                AddNewScreenElement(element);
-                            }
+                                undoElements.elements.ForEach(x => AddNewScreenElement(x, true));
+                                break;
+                            case UndoRedoActionType.Replace:
+                                undoElements.elements.ForEach(x => ReplaceExistingElement(x));
+                                break;
+                            case UndoRedoActionType.Create:
+                                // if we UNDO creation - we have to delete
+                                undoElements.elements.ForEach(x => DeleteElement(x));
+                                break;
+                            case UndoRedoActionType.Delete:
+                                // if we UNDO deleting - we have to create
+                                undoElements.elements.ForEach(x => AddNewScreenElement(x, true));
+                                break;
                         }
+
+                        //var undoElements = UndoRedo.Undo();
+
+                        //foreach (var element in undoElements.elements)
+                        //{
+                        //    if (ElementsOnWorkSpace.ContainsKey(element.Id))
+                        //    {
+                        //        if (undoElements.werePasted)
+                        //        {
+                        //            DeleteElement(element);
+                        //        }
+                        //        else
+                        //        {
+                        //            ReplaceExistingElement(element);
+                        //        }
+                        //    }
+                        //    else
+                        //    {
+                        //        AddNewScreenElement(element);
+                        //    }
+                        //}
                     },
                     obj =>
                     {
@@ -175,24 +201,50 @@ namespace ExpandScadaEditor.ScreenEditor
                     {
                         var redoElements = UndoRedo.Redo();
 
-                        foreach (var element in redoElements.elements)
+                        switch (redoElements.actionType)
                         {
-                            if (redoElements.werePasted)
-                            {
-                                AddNewScreenElement(element,true);
-                                return;
-                            }
-
-                            if (ElementsOnWorkSpace.ContainsKey(element.Id))
-                            {
-
-                                ReplaceExistingElement(element);
-                            }
-                            else
-                            {
-                                AddNewScreenElement(element);
-                            }
+                            case UndoRedoActionType.Base:
+                                foreach (var pair in ElementsOnWorkSpace)
+                                {
+                                    DeleteElement(pair.Value);
+                                }
+                                redoElements.elements.ForEach(x => AddNewScreenElement(x, true));
+                                break;
+                            case UndoRedoActionType.Replace:
+                                redoElements.elements.ForEach(x => ReplaceExistingElement(x));
+                                break;
+                            case UndoRedoActionType.Create:
+                                // if we REDO creation - we have to create
+                                redoElements.elements.ForEach(x => AddNewScreenElement(x, true));
+                                break;
+                            case UndoRedoActionType.Delete:
+                                // if we REDO deleting - we have to delete
+                                redoElements.elements.ForEach(x => DeleteElement(x));
+                                break;
                         }
+
+
+
+                        //var redoElements = UndoRedo.Redo();
+
+                        //foreach (var element in redoElements.elements)
+                        //{
+                        //    if (redoElements.werePasted)
+                        //    {
+                        //        AddNewScreenElement(element,true);
+                        //        return;
+                        //    }
+
+                        //    if (ElementsOnWorkSpace.ContainsKey(element.Id))
+                        //    {
+
+                        //        ReplaceExistingElement(element);
+                        //    }
+                        //    else
+                        //    {
+                        //        AddNewScreenElement(element);
+                        //    }
+                        //}
                     },
                     obj =>
                     {
@@ -201,8 +253,24 @@ namespace ExpandScadaEditor.ScreenEditor
             }
         }
 
-
-
+        private Command _delete;
+        public Command Delete
+        {
+            get
+            {
+                return _delete ??
+                    (_delete = new Command(obj =>
+                    {
+                        SelectedElements.ForEach(x => ElementsOnWorkSpace.Remove(x.Id));
+                        UndoRedo.NewUserAction(ElementsOnWorkSpace, UndoRedoActionType.Delete); 
+                        SelectedElementsDeleted(null, new EventArgs());
+                    },
+                    obj =>
+                    {
+                        return SelectedElements.Count > 0;
+                    }));
+            }
+        }
 
 
 

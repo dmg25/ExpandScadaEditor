@@ -399,5 +399,38 @@ namespace ExpandScadaEditor.ScreenEditor.Items
         }
 
 
+
+        static bool PropertiesAreEqual(ScreenElement elementA, ScreenElement elementB)
+        {
+            // TODO put here list of properties!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+            //      now use only for tests!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+
+            if (elementA is null && elementB is null)
+            {
+                return true;
+            }
+            else if (elementA is not null && elementB is null || elementA is null && elementB is not null)
+            {
+                return false;
+            }
+
+            return elementA.id == elementB.id && elementA.Name == elementB.Name
+            && elementA.coordX == elementB.coordX && elementA.coordY == elementB.coordY
+            && elementA.Width == elementB.Width && elementA.Height == elementB.Height;
+            //&& elementA.ActualWidth == elementB.ActualWidth && elementA.ActualHeight == elementB.ActualHeight;
+        }
+
+        public static bool operator ==(ScreenElement elementA, ScreenElement elementB)
+        {
+
+            return PropertiesAreEqual(elementA, elementB);
+        }
+
+        public static bool operator !=(ScreenElement elementA, ScreenElement elementB)
+        {
+            return !PropertiesAreEqual(elementA, elementB);
+        }
+
     }
 }
