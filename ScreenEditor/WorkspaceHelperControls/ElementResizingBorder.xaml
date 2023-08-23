@@ -21,10 +21,23 @@
         
         <!--<Rectangle Grid.RowSpan="3" Grid.ColumnSpan="3" Stroke="Black" StrokeThickness="2" Margin="-2"/>-->
 
-        <Line x:Name="SizeLeft" Grid.RowSpan="3" Grid.Column="0" Y1="1" Stroke="Black" StrokeThickness="2" HorizontalAlignment="Left" Stretch="Fill" Margin="-2,0,0,0"/>
+
+        <Line x:Name="SizeLeft" Grid.RowSpan="3" Grid.Column="0" Y1="1" Stroke="Transparent" Opacity="0" StrokeThickness="10" HorizontalAlignment="Left" Stretch="Fill" Margin="-5,0,0,0"/>
+        <Line x:Name="SizeRight" Grid.RowSpan="3" Grid.Column="3" Y1="1" Stroke="Transparent" Opacity="0" StrokeThickness="10" HorizontalAlignment="Right" Stretch="Fill" Margin="0,0,-5,0"/>
+        <Line x:Name="SizeTop" Grid.Row="0" Grid.ColumnSpan="3" X1="1" Stroke="Transparent" Opacity="0" StrokeThickness="10" VerticalAlignment="Top" Stretch="Fill" Margin="0,-5,0,0"/>
+        <Line x:Name="SizeBottom" Grid.Row="3" Grid.ColumnSpan="3" X1="1" Stroke="Transparent" Opacity="0" StrokeThickness="10" VerticalAlignment="Bottom" Stretch="Fill" Margin="0,0,0,-5"/>
+
+        <Line  Grid.RowSpan="3" Grid.Column="0" Y1="1" Stroke="Black" StrokeThickness="1" HorizontalAlignment="Left" Stretch="Fill" Margin="-1,0,0,0"/>
+        <Line  Grid.RowSpan="3" Grid.Column="3" Y1="1" Stroke="Black" StrokeThickness="1" HorizontalAlignment="Right" Stretch="Fill" Margin="0,0,-1,0"/>
+        <Line  Grid.Row="0" Grid.ColumnSpan="3" X1="1" Stroke="Black" StrokeThickness="1" VerticalAlignment="Top" Stretch="Fill" Margin="0,-1,0,0"/>
+        <Line  Grid.Row="3" Grid.ColumnSpan="3" X1="1" Stroke="Black" StrokeThickness="1" VerticalAlignment="Bottom" Stretch="Fill" Margin="0,0,0,-1"/>
+
+
+
+        <!--<Line x:Name="SizeLeft" Grid.RowSpan="3" Grid.Column="0" Y1="1" Stroke="Black" StrokeThickness="2" HorizontalAlignment="Left" Stretch="Fill" Margin="-2,0,0,0"/>
         <Line x:Name="SizeRight" Grid.RowSpan="3" Grid.Column="3" Y1="1" Stroke="Black" StrokeThickness="2" HorizontalAlignment="Right" Stretch="Fill" Margin="0,0,-2,0"/>
         <Line x:Name="SizeTop" Grid.Row="0" Grid.ColumnSpan="3" X1="1" Stroke="Black" StrokeThickness="2" VerticalAlignment="Top" Stretch="Fill" Margin="0,-2,0,0"/>
-        <Line x:Name="SizeBottom" Grid.Row="3" Grid.ColumnSpan="3" X1="1" Stroke="Black" StrokeThickness="2" VerticalAlignment="Bottom" Stretch="Fill" Margin="0,0,0,-2"/>
+        <Line x:Name="SizeBottom" Grid.Row="3" Grid.ColumnSpan="3" X1="1" Stroke="Black" StrokeThickness="2" VerticalAlignment="Bottom" Stretch="Fill" Margin="0,0,0,-2"/>-->
 
         <Rectangle x:Name="SizeNWSE_leftUp" Grid.Row="0" Grid.Column="0" Stroke="Blue" Fill="Blue" StrokeThickness="2" Margin="-12,-12,0,0" Width="10" Height="10"/>
         <Rectangle x:Name="SizeNESW_rightUp" Grid.Row="0" Grid.Column="3" Stroke="Blue" Fill="Blue" StrokeThickness="2" Margin="0,-12,-12,0" Width="10" Height="10"/>
