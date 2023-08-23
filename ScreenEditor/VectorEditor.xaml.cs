@@ -53,7 +53,7 @@ namespace ExpandScadaEditor.ScreenEditor
      *                  - if there is postfix - increase it
      *              - check if pasting coordinates are not out of border. If new coord bigger then border - set elements at border
      *              
-     *   ###CREATE/DELETE ELEMENT     
+     *   ++-(catalog's cursor problem)CREATE/DELETE ELEMENT     
      *          - Create element
      *              - User must press on the element on the catalog and move it to workspace
      *              - during the moving show opacitiezed element following the cursor
@@ -103,7 +103,8 @@ namespace ExpandScadaEditor.ScreenEditor
      *      COPY/PASTE WITH ADDITIONAL TOOLS/CONTEXT MENU
      *      
      *      
-     * 
+     *      FIX: If you select one item, and try to move it, it can be resized. 
+     *          DO RESIZE ONLY IF USER OVER RECTANGLES FOR RESIZING? AND +5px AROUND ?
      * 
      * 
      * */
@@ -152,7 +153,8 @@ namespace ExpandScadaEditor.ScreenEditor
 
         ElementsSelectingBorder borderSelecting;
 
-        ScreenElement elementFromCaltalog;
+        ScreenElement elementFromCatalog;
+        ScreenElement tmpElementFromCatalog;
         bool elementFromCatalogMoved = false;
 
         public VectorEditor()
@@ -226,6 +228,57 @@ namespace ExpandScadaEditor.ScreenEditor
 
         private void ElementCatalog_MouseMove(object sender, MouseEventArgs e)
         {
+            if (e.LeftButton == MouseButtonState.Pressed && elementFromCatalog is not null)
+            {
+                //TranslateTransform transform = new TranslateTransform();
+                //transform.X = Mouse.GetPosition(WorkSpace).X;
+                //transform.Y = Mouse.GetPosition(WorkSpace).Y;
+
+                Point point = new Point(Mouse.GetPosition(WorkSpace).X, Mouse.GetPosition(WorkSpace).Y);
+
+                if (!elementFromCatalogMoved)
+                {
+                    // create new element on the CANVAS layer and set opacity 0,5 and -1 ID
+                    elementFromCatalogMoved = true;
+
+                    var type = elementFromCatalog.GetType();
+                    tmpElementFromCatalog = (ScreenElement)Activator.CreateInstance(type);
+                    tmpElementFromCatalog.Id = -1;
+                    tmpElementFromCatalog.Name = "TMP_FOLLOWER";
+                    tmpElementFromCatalog.Opacity = 0.5;
+                    tmpElementFromCatalog.CoordX = point.X;
+                    tmpElementFromCatalog.CoordY = point.Y;
+
+
+                    //tmpElementFromCatalog.CatalogMode = true;
+
+
+
+                    WorkSpace.Children.Add(tmpElementFromCatalog);
+                    Canvas.SetLeft(tmpElementFromCatalog, tmpElementFromCatalog.CoordX);
+                    Canvas.SetTop(tmpElementFromCatalog, tmpElementFromCatalog.CoordY);
+
+                    ElementCatalog.Cursor = Cursors.SizeAll;
+                    Cursor = Cursors.SizeAll;
+                }
+                else
+                {
+                    tmpElementFromCatalog.CoordX = point.X;
+                    tmpElementFromCatalog.CoordY = point.Y;
+                    Canvas.SetLeft(tmpElementFromCatalog, tmpElementFromCatalog.CoordX);
+                    Canvas.SetTop(tmpElementFromCatalog, tmpElementFromCatalog.CoordY);
+                }
+
+                // move this element on the same layer, follow the cursor
+
+                
+                //this.Samplebutton.RenderTransform = transform;
+
+
+
+            }
+
+
             // check if left button pressed - and we have instance of pressed element
             // mark that it was a moving
             // take created instance and show it near by cursor with opacity and redraw it every time
@@ -238,27 +291,41 @@ namespace ExpandScadaEditor.ScreenEditor
 
         private void ElementCatalog_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
         {
-            // check if there is created instance and was moving or not. If was - just cancel everything.
-            // if not - create new element on workspace on center above every other element ()
-            //      check if there is element on this coordinates. If yes - move +10px and check till place will be free - paste element
-
-            if (elementFromCaltalog is not null)
+            if (elementFromCatalog is not null)
             {
-                //!!!generate new name/id !!!
-                // find current center of workspace coordinates
-                // check if any element has same coordinates -place or move a little, do not forhet about border of workspace
-                //set only properties on element
+                if (elementFromCatalogMoved)
+                {
+                    elementFromCatalogMoved = false;
 
-                var position = FindPlaceForNewElement(elementFromCaltalog);
-                elementFromCaltalog.CoordX = position.x;
-                elementFromCaltalog.CoordY = position.y;
+                    if (tmpElementFromCatalog.CoordX > 0 && tmpElementFromCatalog.CoordX < WorkSpace.ActualWidth
+                        && tmpElementFromCatalog.CoordY > 0 && tmpElementFromCatalog.CoordY < WorkSpace.ActualHeight)
+                    {
+                        elementFromCatalog.CoordX = tmpElementFromCatalog.CoordX;
+                        elementFromCatalog.CoordY = tmpElementFromCatalog.CoordY;
+                        WorkSpace.Children.Remove(tmpElementFromCatalog);
+                        tmpElementFromCatalog = null;
+                    }
+                    else
+                    {
+                        WorkSpace.Children.Remove(tmpElementFromCatalog);
+                        tmpElementFromCatalog = null;
+                        elementFromCatalog = null;
+                        Cursor = Cursors.Arrow;
+                        return;
+                    }
+                }
+                else
+                {
+                    var position = FindPlaceForNewElement(elementFromCatalog);
+                    elementFromCatalog.CoordX = position.x;
+                    elementFromCatalog.CoordY = position.y;
+                }
 
-                VM.AddNewScreenElement(elementFromCaltalog);
+                VM.AddNewScreenElement(elementFromCatalog);
                 VM.UndoRedo.NewUserAction(VM.ElementsOnWorkSpace, UndoRedoActionType.Create);
             }
 
-
-
+            Cursor = Cursors.Arrow;
         }
 
         private void ListViewItem_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
@@ -266,8 +333,23 @@ namespace ExpandScadaEditor.ScreenEditor
             var item = sender as ListViewItem;
             if (item != null)
             {
+                // TODO this is only for cosmetics - solve this problem late
+                 // One problem in this place.If I do some actions with element from catalog, then it looks like non - initialized, 
+                 //it is kinda we here see right element, but on list shown some else.I can not use CatalogMode because of it and
+                 //Cursor drops every time -looks not perfect.
+
+                 //If you check dynamical tree in debugger - these properties crossed. why? check this.
+
+
+
+
+
+
+
                 var element = item.Content as ScreenElement;
-                elementFromCaltalog = (ScreenElement)Activator.CreateInstance(element.GetType());
+                //element.Cursor = Cursors.SizeAll;
+                elementFromCatalog = (ScreenElement)Activator.CreateInstance(element.GetType());
+                //element.CatalogMode = true;
             }
         }
 

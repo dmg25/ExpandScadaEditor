@@ -290,8 +290,8 @@ namespace ExpandScadaEditor.ScreenEditor
             //Items.Add(new TestItem2VM());
             //Items.Add(new TestItem2VM());
 
-            Items.Add(new TestItem2());
-            Items.Add(new TestItem2());
+            Items.Add(new TestItem2() { CatalogMode = true, Id = -111});
+            Items.Add(new TestItem2() { CatalogMode = true, Id = -222 });
 
 
             // Create/Load elements VM must be created automatically for each

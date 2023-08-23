@@ -94,6 +94,20 @@ namespace ExpandScadaEditor.ScreenEditor.Items
             }
         }
 
+        private bool catalogMode;
+        public bool CatalogMode
+        {
+            get
+            {
+                return catalogMode;
+            }
+            set
+            {
+                catalogMode = value;
+                //NotifyPropertyChanged();
+            }
+        }
+
         public void ShowResizeBorder()
         {
             try
@@ -103,7 +117,11 @@ namespace ExpandScadaEditor.ScreenEditor.Items
                 {
                     
                     resizeBorder.Visibility = Visibility.Visible;
-                    Cursor = Cursors.SizeAll;
+                    if (!CatalogMode)
+                    {
+                        Cursor = Cursors.SizeAll;
+                    }
+                    
                 }
                 
             }
@@ -122,7 +140,10 @@ namespace ExpandScadaEditor.ScreenEditor.Items
                 if (resizeBorder != null)
                 {
                     resizeBorder.Visibility = Visibility.Hidden;
-                    Cursor = Cursors.Arrow;
+                    if (!CatalogMode)
+                    {
+                        Cursor = Cursors.Arrow;
+                    }
                 }
             }
             catch (Exception ex)
@@ -213,6 +234,7 @@ namespace ExpandScadaEditor.ScreenEditor.Items
             //resizing events
             try
             {
+
                 var resizeBorder = (ElementResizingBorder)this.FindName(RESIZE_BORDER_NAME);
                 if (resizeBorder != null)
                 {

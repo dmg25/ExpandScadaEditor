@@ -43,26 +43,6 @@
             
         </ToolBarTray>
 
-        <ListView x:Name="ElementCatalog" Grid.Column="0" Grid.Row="1"
-                ItemsSource="{Binding Items}" 
-                >
-            <ListView.ItemContainerStyle>
-                <Style TargetType="ListViewItem">
-                    <EventSetter Event="PreviewMouseLeftButtonDown" Handler="ListViewItem_PreviewMouseLeftButtonDown" />
-                </Style>
-            </ListView.ItemContainerStyle>
-        </ListView>
-        
-        <!--<ListView x:Name="ElementCatalog" Grid.Column="0" Grid.Row="1"
-                ItemsSource="{Binding Items}" 
-                ItemTemplateSelector="{StaticResource ItemsTemplateSelector}" >
-            <ListView.ItemContainerStyle>
-                <Style TargetType="ListViewItem">
-                    <EventSetter Event="PreviewMouseLeftButtonDown" Handler="ListViewItem_PreviewMouseLeftButtonDown" />
-                </Style>
-            </ListView.ItemContainerStyle>
-        </ListView>-->
-
         <GridSplitter Grid.Column="1" Grid.Row="1"
               HorizontalAlignment="Center"
               VerticalAlignment="Stretch"
@@ -81,6 +61,15 @@
             <TextBlock Canvas.Left="10" Canvas.Bottom="20" Text="{Binding MouseOverElement}"/>
         </Canvas>
 
+        <ListView x:Name="ElementCatalog" Grid.Column="0" Grid.Row="1"
+                ItemsSource="{Binding Items}" 
+                >
+            <ListView.ItemContainerStyle>
+                <Style TargetType="ListViewItem">
+                    <EventSetter Event="PreviewMouseLeftButtonDown" Handler="ListViewItem_PreviewMouseLeftButtonDown" />
+                </Style>
+            </ListView.ItemContainerStyle>
+        </ListView>
 
         <GridSplitter Grid.Column="3" Grid.Row="1"
               HorizontalAlignment="Center"
