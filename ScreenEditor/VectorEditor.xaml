@@ -7,11 +7,14 @@
              xmlns:items="clr-namespace:ExpandScadaEditor.ScreenEditor.Items"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800"
+             Focusable="True" Loaded="UserControl_Loaded" PreviewKeyDown="UserControl_PreviewKeyDown"
              >
+
     <UserControl.Resources>
         <local:VectorEditorVM x:Key="ViewModel" />
         <local:ItemsTemplateSelector x:Key="ItemsTemplateSelector" />
     </UserControl.Resources>
+
     <Grid DataContext="{StaticResource ViewModel}">
         <Grid.ColumnDefinitions>
             <ColumnDefinition MinWidth="50" Width="100" />
@@ -25,7 +28,10 @@
             <RowDefinition/>
         </Grid.RowDefinitions>
 
-        <ToolBarTray Grid.ColumnSpan="5">
+
+
+
+        <ToolBarTray Grid.ColumnSpan="5" >
             <ToolBarTray.Background>
                 <SolidColorBrush Color="{DynamicResource {x:Static SystemColors.ControlColorKey}}"/>
             </ToolBarTray.Background>
@@ -35,9 +41,13 @@
                     <SolidColorBrush Color="{DynamicResource {x:Static SystemColors.ControlColorKey}}"/>
                 </ToolBar.Background>
 
-                <Button Content="Undo" Command="{Binding Undo}" />
-                <Button Content="Redo" Command="{Binding Redo}"/>
-                <Button Content="Del" Command="{Binding Delete}"/>
+                <Button Content="Undo" Command="{Binding Undo}" Focusable="False"/>
+                <Button Content="Redo" Command="{Binding Redo}" Focusable="False"/>
+                <Button Content="Del" Command="{Binding Delete}" Focusable="False"/>
+                <Button Content="Copy" Command="{Binding Copy}" Focusable="False"/>
+                <Button Content="Paste" Command="{Binding Paste}" Focusable="False"/>
+                <Button Content="SelectAll" Command="{Binding SelectAll}" Focusable="False"/>
+                <Button Content="Cut" Command="{Binding Cut}" Focusable="False"/>
             </ToolBar>
             
             
@@ -49,12 +59,15 @@
               Background="White" 
               ShowsPreview="True"
               Width="5"
-              />
+              Focusable="False"/>
 
 
         <Canvas x:Name="WorkSpace" Grid.Column="2" Grid.Row="1" AllowDrop="True" Background="Transparent"
-                MouseMove="WorkSpace_MouseMove"
+                MouseMove="WorkSpace_MouseMove" 
                 >
+
+
+
 
             <TextBlock Canvas.Left="10" Canvas.Bottom="60" Text="{Binding MouseX}"/>
             <TextBlock Canvas.Left="10" Canvas.Bottom="40" Text="{Binding MouseY}"/>
@@ -77,7 +90,7 @@
               Background="White" 
               ShowsPreview="True"
               Width="5"
-              />
+              Focusable="False"/>
         
         
     </Grid>

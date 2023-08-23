@@ -34,24 +34,10 @@ namespace ExpandScadaEditor.ScreenEditor
      *              - if was not selected - drop current selection and select it and move only this element
      *          - 
      *      
-     *      COPYING & PASTE
-     *          - Copy by command
-     *              - r-click on screen element shows context menu (comes from basic class)
-     *              - there is copy command - press - this item(s) (SELECTED) will be saved to buffer
-     *              - the same must be for any selected group from menu/toolbox
-     *              - catch ctrl+c command - do the same
-     *          - Copy during the moving
-     *              - if user select the group, and started to move it, then:
-     *                  - if ctrl not pressed - move items as usual
-     *                  - if pressed - place original element on starting position and create a copy with opacity, move the copy
-     *                  - if element was moved and only then ctrl was pressed - return original element and move the copy
-     *                  - if moving happens with ctrl and ctrl was dropped - delete copy of element and move original element to current position
-     *          - Paste by command (context menu on workspace or menu/toolbox, ctrl+v)
-     *              - each element in buffer has current coordinates on copying moment - add to these coordinates 5+10px and place all elements with new coodrs
-     *              - give each element new name. 
-     *                  - if current name has no number postfix (_NN) there is not, ot can not be converted to number - add postfix "_1"
-     *                  - if there is postfix - increase it
-     *              - check if pasting coordinates are not out of border. If new coord bigger then border - set elements at border
+     *   +++COPYING & PASTE
+     *          + Copy by command
+     *          + Paste by command (context menu on workspace or menu/toolbox, ctrl+v)
+
      *              
      *   ++-(catalog's cursor problem)CREATE/DELETE ELEMENT     
      *          - Create element
@@ -102,6 +88,7 @@ namespace ExpandScadaEditor.ScreenEditor
      *      
      *      COPY/PASTE WITH ADDITIONAL TOOLS/CONTEXT MENU
      *      
+     *   +++SELECT ALL WITH CTRL+A
      *      
      *      FIX: If you select one item, and try to move it, it can be resized. 
      *          DO RESIZE ONLY IF USER OVER RECTANGLES FOR RESIZING? AND +5px AROUND ?
@@ -161,8 +148,7 @@ namespace ExpandScadaEditor.ScreenEditor
         {
             InitializeComponent();
 
-            
-
+           
             // TODO For tests, later make it better
             ItemsTemplateSelector itemsTemplateSelector = (ItemsTemplateSelector)Resources["ItemsTemplateSelector"];
             Dictionary<string, DataTemplate> previewTemplates = new Dictionary<string, DataTemplate>
@@ -177,6 +163,7 @@ namespace ExpandScadaEditor.ScreenEditor
             VM.ScreenElementReplaced += VM_ScreenElementReplaced;
             VM.ScreenElementDeleted += VM_ScreenElementDeleted;
             VM.SelectedElementsDeleted += VM_SelectedElementsDeleted;
+            VM.SelectTheseElements += VM_SelectTheseElements; 
             VM.Initialize();
 
             WorkSpace.MouseLeftButtonDown += WorkSpace_MouseLeftButtonDown;
@@ -193,6 +180,13 @@ namespace ExpandScadaEditor.ScreenEditor
             ElementCatalog.MouseLeftButtonUp += ElementCatalog_MouseLeftButtonUp;
             ElementCatalog.MouseMove += ElementCatalog_MouseMove;
 
+           
+        }
+
+        private void VM_SelectTheseElements(object sender, ScreenElementsEventArgs e)
+        {
+            DeselectAllElements();
+            e.Elements.ForEach(x => SelectElement(x));
         }
 
         private void VM_SelectedElementsDeleted(object sender, EventArgs e)
@@ -277,13 +271,6 @@ namespace ExpandScadaEditor.ScreenEditor
 
 
             }
-
-
-            // check if left button pressed - and we have instance of pressed element
-            // mark that it was a moving
-            // take created instance and show it near by cursor with opacity and redraw it every time
-
-
             //elementFromCatalogMoved = true;
 
 
@@ -339,12 +326,6 @@ namespace ExpandScadaEditor.ScreenEditor
                  //Cursor drops every time -looks not perfect.
 
                  //If you check dynamical tree in debugger - these properties crossed. why? check this.
-
-
-
-
-
-
 
                 var element = item.Content as ScreenElement;
                 //element.Cursor = Cursors.SizeAll;
@@ -501,21 +482,17 @@ namespace ExpandScadaEditor.ScreenEditor
 
         private void WorkSpace_MouseMove(object sender, MouseEventArgs e)
         {
-            // test
+            //--- test / delete later ---
             var mousePosition = e.GetPosition(WorkSpace);
             VM.MouseX = mousePosition.X;
             VM.MouseY = mousePosition.Y;
-
-            //if (movingInResizeMode)
-            //{
-            //    return;
-            //}
+            //---------------------------
 
             if (e.LeftButton == MouseButtonState.Pressed && borderSelecting != null)
             {
                 CurrentMouseMovingMode = MouseMovingMode.Selecting;
             }
-            else if(e.LeftButton == MouseButtonState.Pressed && VM.SelectedElements.Count != 0 /*&& elementsOnWorkSpace.ContainsKey(SelectedElement.Name)*/)
+            else if(e.LeftButton == MouseButtonState.Pressed && VM.SelectedElements.Count != 0)
             {
                 CurrentMouseMovingMode = MouseMovingMode.MoveSelectedElements;
             }           
@@ -524,12 +501,8 @@ namespace ExpandScadaEditor.ScreenEditor
                 CurrentMouseMovingMode = MouseMovingMode.None;
             }
 
-
             MouseMovingEffects(mousePosition);
         }
-
-
-
 
         void MouseMovingEffects(Point currentPosition)
         {
@@ -575,7 +548,6 @@ namespace ExpandScadaEditor.ScreenEditor
                         }
                     }
 
-
                     // set new coordinates for each element
                     foreach (var element in VM.SelectedElements)
                     {
@@ -598,16 +570,7 @@ namespace ExpandScadaEditor.ScreenEditor
 
                     }
                     break;
-
-
-
             }
-
-
-
-
-
-
         }
 
 
@@ -768,7 +731,159 @@ namespace ExpandScadaEditor.ScreenEditor
 
 
 
+        private void UserControl_Loaded(object sender, RoutedEventArgs e)
+        {
+            Focus();
 
+            // TODO when you add properties for workspace size and it will be initialized in VM - move it there!
+            VM.WorkSpaceHeight = WorkSpace.ActualHeight;
+            VM.WorkSpaceWidth = WorkSpace.ActualWidth;
+        }
+
+
+        // Catching hotheys. Standard way doesn't work at all (from XAML) by unknown reason. 
+        // I make a focus, but InputBinding is not working. 
+        // Looks like I have to use RoutedCommand, but for now it looks no good, so we do it here.
+        private void UserControl_PreviewKeyDown(object sender, KeyEventArgs e)
+        {
+            ICommand command = null;
+
+            if (Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl))
+            {
+                // Element resizing
+                if (e.Key == Key.Right || e.Key == Key.Down || e.Key == Key.Left || e.Key == Key.Up)
+                {
+                    switch (e.Key)
+                    {
+                        case Key.Right:
+                            if (CanMoveElements(VM.SelectedElements, e.Key))
+                            {
+                                VM.SelectedElements.ForEach(x => x.Width++);
+                            }
+                            break;
+                        case Key.Down:
+                            if (CanMoveElements(VM.SelectedElements, e.Key))
+                            {
+                                VM.SelectedElements.ForEach(x => x.Height++);
+                            }
+                            break;
+                        case Key.Left:
+                            VM.SelectedElements.ForEach(x => { if (x.Width > 1) x.Width--; });
+                            break;
+                        case Key.Up:
+                            VM.SelectedElements.ForEach(x => { if (x.Height > 1) x.Height--; });
+                            break;
+                    }
+                    VM.UndoRedo.NewUserAction(VM.ElementsOnWorkSpace);
+                }
+                else
+                {
+                    // Commands
+                    switch (e.Key)
+                    {
+                        case Key.C:
+                            command = VM.Copy;
+                            break;
+                        case Key.V:
+                            command = VM.Paste;
+                            break;
+                        case Key.Z:
+                            command = VM.Undo;
+                            break;
+                        case Key.Y:
+                            command = VM.Redo;
+                            break;
+                        case Key.A:
+                            command = VM.SelectAll;
+                            break;
+                        case Key.X:
+                            command = VM.Cut;
+                            break;
+                    }
+
+                    if (command != null && command.CanExecute(null))
+                    {
+                        command.Execute(null);
+                    }
+                }
+            }
+            else if (e.Key == Key.Delete)
+            {
+                command = VM.Delete;
+            }
+            else if (VM.SelectedElements.Count > 0 && (e.Key == Key.Right || e.Key == Key.Down || e.Key == Key.Left || e.Key == Key.Up))
+            {
+                // Element moving
+
+                if (!CanMoveElements(VM.SelectedElements, e.Key))
+                {
+                    return;
+                }
+
+                switch (e.Key)
+                {
+                    case Key.Right:
+                        VM.SelectedElements.ForEach(x => x.CoordX++);
+                        break;
+                    case Key.Down:
+                        VM.SelectedElements.ForEach(x => x.CoordY++);
+                        break;
+                    case Key.Left:
+                        VM.SelectedElements.ForEach(x => x.CoordX--);
+                        break;
+                    case Key.Up:
+                        VM.SelectedElements.ForEach(x => x.CoordY--);
+                        break;
+                }
+
+                // Update canvas position
+                VM.SelectedElements.ForEach(x => { Canvas.SetLeft(x, x.CoordX); Canvas.SetTop(x, x.CoordY); });
+                VM.UndoRedo.NewUserAction(VM.ElementsOnWorkSpace);
+            }
+
+
+            
+
+        }
+
+
+        bool CanMoveElements(List<ScreenElement> elementsToMove, Key direction)
+        {
+            bool canMove = true;
+            foreach (var element in elementsToMove)
+            {
+                switch (direction)
+                {
+                    case Key.Right:
+                        if (element.CoordX + element.ActualWidth >= WorkSpace.ActualWidth)
+                        {
+                            canMove = false;
+                        }
+                        break;
+                    case Key.Down:
+                        if (element.CoordY + element.ActualHeight >= WorkSpace.ActualHeight)
+                        {
+                            canMove = false;
+                        }
+                        break;
+                    case Key.Left:
+                        if (element.CoordX <= 0)
+                        {
+                            canMove = false;
+                        }
+                        break;
+                    case Key.Up:
+                        if (element.CoordY <= 0)
+                        {
+                            canMove = false;
+                        }
+                        break;
+                }
+            }
+
+            return canMove;
+                
+        }
 
     }
 

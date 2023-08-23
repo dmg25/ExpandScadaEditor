@@ -9,7 +9,6 @@ namespace ExpandScadaEditor.Data
 {
     public class Command : ICommand
     {
-
         private Action<object> execute;
         private Func<object, bool> canExecute;
 
