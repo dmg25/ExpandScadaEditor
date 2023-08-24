@@ -72,9 +72,9 @@ namespace ExpandScadaEditor.ScreenEditor
      *      
      *   +++ADD SCROLLBARS IF WORKSPACE BIGGER THEN WINDOW
      *      
-     *      MOVE WORKSPACE WITH SCROLL OPERATIONS BY MOUSE + KEYS
+     *   +++MOVE WORKSPACE WITH SCROLL OPERATIONS BY MOUSE + KEYS
      *      
-     *      SHOW EMPTYNESS IF WINDOW IS BIGGER THEN WORKSPACE
+     *   +++SHOW EMPTYNESS IF WINDOW IS BIGGER THEN WORKSPACE
      *      
      *      MOVING OPERATIONS ONLY INSIDE OF THE REAL WORKSPACE
      *      
@@ -483,6 +483,7 @@ namespace ExpandScadaEditor.ScreenEditor
             elementsWereMoved = false;
             tmpPreSelectedElement = null;
             selectedElementIndexByMouse = -1;
+            selectedPositionsBeforeMoving.Clear();
         }
 
         DataTemplate CreateTemplateByName(Type viewType)
@@ -557,15 +558,6 @@ namespace ExpandScadaEditor.ScreenEditor
 
                     break;
                 case MouseMovingMode.CopyDuringMoving:
-                    /*  put above first enterance and save start position of each selected element
-                     *  use preMode here, update after each cycle in the bottom
-                     *  if pre mode is different then 
-                     *      - for moving - set all selected elements new coordinates and delete tmp elements if they are exist
-                     *      - for copying - set all selected element old coordinates and create new elements with opacity, put them to tmp container
-                     *  on mouse up event
-                     *      - if tmp container is not empty - create new elements on these positions
-                     *      - if empty - react like on regular moving
-                     * */
                     if (!elementsWereMoved)
                     {
                         SelectedElementsToMovingMode();
@@ -595,8 +587,6 @@ namespace ExpandScadaEditor.ScreenEditor
                     ChangeCoorditanesOnMoving(TmpFollowerElements, currentPosition,
                         selectedElementIndexByMouse,
                         SelectedElementMousePressedCoordX, SelectedElementMousePressedCoordY);
-
-
                     break;
                 case MouseMovingMode.Selecting:
                     if (borderSelecting != null)
