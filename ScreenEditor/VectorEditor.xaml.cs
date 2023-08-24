@@ -70,7 +70,7 @@ namespace ExpandScadaEditor.ScreenEditor
      *            
      *   +++MOVING WITH COPYING FOR GROUP OF ELEMENTS
      *      
-     *      ADD SCROLLBARS IF WORKSPACE BIGGER THEN WINDOW
+     *   +++ADD SCROLLBARS IF WORKSPACE BIGGER THEN WINDOW
      *      
      *      MOVE WORKSPACE WITH SCROLL OPERATIONS BY MOUSE + KEYS
      *      
@@ -90,8 +90,6 @@ namespace ExpandScadaEditor.ScreenEditor
      *      
      *   +++SELECT ALL WITH CTRL+A
      *      
-     *      FIX: If you select one item, and try to move it, it can be resized. 
-     *          DO RESIZE ONLY IF USER OVER RECTANGLES FOR RESIZING? AND +5px AROUND ?
      * 
      * 
      * */
@@ -797,6 +795,9 @@ namespace ExpandScadaEditor.ScreenEditor
             Focus();
 
             // TODO when you add properties for workspace size and it will be initialized in VM - move it there!
+            WorkSpace.Width = 500;
+            WorkSpace.Height = 500;
+            WorkSpace.Background = Brushes.LightGray;
             VM.WorkSpaceHeight = WorkSpace.ActualHeight;
             VM.WorkSpaceWidth = WorkSpace.ActualWidth;
         }
@@ -1023,6 +1024,16 @@ namespace ExpandScadaEditor.ScreenEditor
             }
         }
 
+        private void ScrollViewer_PreviewMouseWheel(object sender, MouseWheelEventArgs e)
+        {
+            var scrollViewer = (ScrollViewer)sender;
+
+            if (Keyboard.IsKeyDown(Key.LeftShift) || Keyboard.IsKeyDown(Key.RightShift))
+            {
+                scrollViewer.ScrollToHorizontalOffset(scrollViewer.HorizontalOffset - e.Delta);
+                e.Handled = true;
+            }
+        }
     }
 
 

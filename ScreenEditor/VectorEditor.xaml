@@ -61,18 +61,20 @@
               Width="5"
               Focusable="False"/>
 
-
-        <Canvas x:Name="WorkSpace" Grid.Column="2" Grid.Row="1" AllowDrop="True" Background="Transparent"
+        <ScrollViewer Grid.Column="2" Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto"
+                      PreviewMouseWheel="ScrollViewer_PreviewMouseWheel">
+            <Canvas x:Name="WorkSpace"  AllowDrop="True" HorizontalAlignment="Left" VerticalAlignment="Top"
                 MouseMove="WorkSpace_MouseMove" 
                 >
 
 
 
 
-            <TextBlock Canvas.Left="10" Canvas.Bottom="60" Text="{Binding MouseX}"/>
-            <TextBlock Canvas.Left="10" Canvas.Bottom="40" Text="{Binding MouseY}"/>
-            <TextBlock Canvas.Left="10" Canvas.Bottom="20" Text="{Binding MouseOverElement}"/>
-        </Canvas>
+                <TextBlock Canvas.Left="10" Canvas.Bottom="60" Text="{Binding MouseX}"/>
+                <TextBlock Canvas.Left="10" Canvas.Bottom="40" Text="{Binding MouseY}"/>
+                <TextBlock Canvas.Left="10" Canvas.Bottom="20" Text="{Binding MouseOverElement}"/>
+            </Canvas>
+        </ScrollViewer>
 
         <ListView x:Name="ElementCatalog" Grid.Column="0" Grid.Row="1"
                 ItemsSource="{Binding Items}" 
