@@ -40,6 +40,7 @@ namespace ExpandScadaEditor.ScreenEditor
         public event EventHandler<ScreenElementsEventArgs> SelectTheseElements;
 
         internal List<ScreenElement> SelectedElements = new List<ScreenElement>();
+        //internal Dictionary<int, ScreenElement> SelectedElements = new Dictionary<int, ScreenElement>();
         internal List<ScreenElement> CopyPasteBuffer = new List<ScreenElement>();
 
         private List<ScreenElement> items = new List<ScreenElement>();

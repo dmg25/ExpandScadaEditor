@@ -64,7 +64,7 @@ namespace ExpandScadaEditor.ScreenEditor
      *          - select left-up:    object selected if at least one point of it covered 
      *          - select right-up:   object selected if at least one point of it covered 
      *      
-     *      SELECT GROUP OF ELEMENTS WITH MOUSE POINTING
+     *   +++SELECT GROUP OF ELEMENTS WITH MOUSE POINTING
      *      
      *   +++MOVE GROUP OF ELEMENTS
      *            
@@ -131,7 +131,7 @@ namespace ExpandScadaEditor.ScreenEditor
 
         //Dictionary<string, ScreenElement> SelectedElements = new Dictionary<string, ScreenElement>();
 
-        //List<ScreenElement> SelectedElements = new List<ScreenElement>();
+        ScreenElement tmpPreSelectedElement = new ScreenElement();
         int selectedElementIndexByMouse = -1;
 
         double SelectedElementMousePressedCoordX { get; set; }
@@ -426,10 +426,16 @@ namespace ExpandScadaEditor.ScreenEditor
 
             var element = sender as ScreenElement;
 
-            if (!VM.SelectedElements.Contains(element))
+            //if (!VM.SelectedElements.Contains(element))
+            if (VM.SelectedElements.Find(x => x.Id == element.Id) is null)
             {
-                DeselectAllElements();
+                if (!Keyboard.IsKeyDown(Key.LeftCtrl) && !Keyboard.IsKeyDown(Key.RightCtrl))
+                {
+                    DeselectAllElements();
+                }
+                    
                 SelectElement(element);
+                tmpPreSelectedElement = element;
             }
 
             //SelectedElement = sender as ScreenElement;
@@ -447,20 +453,40 @@ namespace ExpandScadaEditor.ScreenEditor
 
             if (!elementsWereMoved)
             {
-                DeselectAllElements();
-                SelectElement(element);
+                if (Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl))
+                {
+                    if (tmpPreSelectedElement is null)
+                    {
+                        DeselectOneElement(element);
+                    }
+                    else
+                    {
+                        if (VM.SelectedElements.Find(x => x.Id == element.Id) is null)
+                        {
+                            SelectElement(element);
+                        } 
+                    }
+                }
+                else
+                {
+                    DeselectAllElements();
+                    if (VM.SelectedElements.Find(x => x.Id == element.Id) is null)
+                    {
+                        SelectElement(element);
+                    }
+                }
             }
             else
             {
+                SelectedElementsToResizingMode();
                 // At the end of the moving - invoke new user action for undoredo
                 VM.UndoRedo.NewUserAction(VM.ElementsOnWorkSpace);
                 //VM.UndoRedo.NewUserAction(VM.SelectedElements);
             }
 
             elementsWereMoved = false;
+            tmpPreSelectedElement = null;
             selectedElementIndexByMouse = -1;
-
-            
         }
 
         DataTemplate CreateTemplateByName(Type viewType)
@@ -509,7 +535,12 @@ namespace ExpandScadaEditor.ScreenEditor
             switch (CurrentMouseMovingMode)
             {
                 case MouseMovingMode.MoveSelectedElements:
-                    elementsWereMoved = true;
+                    if (!elementsWereMoved)
+                    {
+                        SelectedElementsToMovingMode();
+                        elementsWereMoved = true;
+                    }
+
                     double newPositionX = currentPosition.X - SelectedElementMousePressedCoordX;
                     double newPositionY = currentPosition.Y - SelectedElementMousePressedCoordY;
 
@@ -597,14 +628,16 @@ namespace ExpandScadaEditor.ScreenEditor
                         if (selectRect1.X <= elementRect1.X && selectRect1.Y <= elementRect1.Y
                             && selectRect2.X >= elementRect2.X && selectRect2.Y >= elementRect2.Y)
                         {
-                            if (!VM.SelectedElements.Contains(element.Value))
+                            //if (!VM.SelectedElements.Contains(element.Value))
+                            if (VM.SelectedElements.Find(x => x.Id == element.Value.Id) is null)
                             {
                                 SelectElement(element.Value);
                             }
                         }
                         else
                         {
-                            if (VM.SelectedElements.Contains(element.Value))
+                            //if (VM.SelectedElements.Contains(element.Value))
+                            if (VM.SelectedElements.Find(x => x.Id == element.Value.Id) is not null)
                             {
                                 DeselectOneElement(element.Value);
                             }
@@ -624,14 +657,16 @@ namespace ExpandScadaEditor.ScreenEditor
                         if (selectRect2.X >= elementRect1.X && selectRect2.Y >= elementRect1.Y &&
                             selectRect1.X <= elementRect2.X && selectRect1.Y <= elementRect2.Y)
                         {
-                            if (!VM.SelectedElements.Contains(element.Value))
+                            //if (!VM.SelectedElements.Contains(element.Value))
+                            if (VM.SelectedElements.Find(x => x.Id == element.Value.Id) is null)
                             {
                                 SelectElement(element.Value);
                             }
                         }
                         else
                         {
-                            if (VM.SelectedElements.Contains(element.Value))
+                            //if (VM.SelectedElements.Contains(element.Value))
+                            if (VM.SelectedElements.Find(x => x.Id == element.Value.Id) is not null)
                             {
                                 DeselectOneElement(element.Value);
                             }
@@ -646,6 +681,18 @@ namespace ExpandScadaEditor.ScreenEditor
         }
 
 
+
+        void SelectedElementsToMovingMode()
+        {
+            VM.SelectedElements.ForEach(x => x.HideResizeBorder());
+            VM.SelectedElements.ForEach(x => x.ShowMovingBorder());
+        }
+
+        void SelectedElementsToResizingMode()
+        {
+            VM.SelectedElements.ForEach(x => x.HideMovingBorder());
+            VM.SelectedElements.ForEach(x => x.ShowResizeBorder());
+        }
 
         void SelectElement(ScreenElement element)
         {
@@ -662,7 +709,8 @@ namespace ExpandScadaEditor.ScreenEditor
             // remove this element from the list
             // create version for string as argument?
 
-            if (!VM.SelectedElements.Contains(element))
+            //if (!VM.SelectedElements.Contains(element))
+            if (VM.SelectedElements.Find(x => x.Id == element.Id) is null)
             {
                 return;
             }

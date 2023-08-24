@@ -36,6 +36,7 @@ namespace ExpandScadaEditor.ScreenEditor.Items
     {
         public const string RESIZE_BORDER_NAME = "RESIZE_BORDER";
         public const string COVER_BORDER_NAME = "COVER_BORDER";
+        public const string MOVING_BORDER_NAME = "MOVING_BORDER";
 
         public event EventHandler<ResizingEventArgs> OnElementResizing;
         public event EventHandler ElementSizeChanged;
@@ -189,7 +190,41 @@ namespace ExpandScadaEditor.ScreenEditor.Items
 
         }
 
-         
+
+        public void ShowMovingBorder()
+        {
+            try
+            {
+                var movingBorder = (ElementMovingBorder)this.FindName(MOVING_BORDER_NAME);
+                if (movingBorder != null)
+                {
+
+                    movingBorder.Visibility = Visibility.Visible;
+                }
+
+            }
+            catch (Exception ex)
+            {
+                // TODO ADD TO LOG   
+            }
+        }
+
+        public void HideMovingBorder()
+        {
+            try
+            {
+                var movingBorder = (ElementMovingBorder)this.FindName(MOVING_BORDER_NAME);
+                if (movingBorder != null)
+                {
+                    movingBorder.Visibility = Visibility.Hidden;
+                }
+            }
+            catch (Exception ex)
+            {
+                // TODO ADD TO LOG   
+            }
+        }
+
 
         public ScreenElement()
         {
@@ -275,6 +310,7 @@ namespace ExpandScadaEditor.ScreenEditor.Items
         {
             if (e.LeftButton == MouseButtonState.Pressed)
             {
+                e.Handled = true;
                 var mousePosition = e.GetPosition(this);
                 OnElementResizing(this, new ResizingEventArgs
                 {
@@ -289,6 +325,7 @@ namespace ExpandScadaEditor.ScreenEditor.Items
         {
             if (e.LeftButton == MouseButtonState.Pressed)
             {
+                e.Handled = true;
                 var mousePosition = e.GetPosition(this);
                 double offsetX = mousePosition.X;
 
@@ -309,6 +346,7 @@ namespace ExpandScadaEditor.ScreenEditor.Items
         {
             if (e.LeftButton == MouseButtonState.Pressed)
             {
+                e.Handled = true;
                 var mousePosition = e.GetPosition(this);
                 double offsetY = mousePosition.Y;
 
@@ -328,6 +366,7 @@ namespace ExpandScadaEditor.ScreenEditor.Items
         {
             if (e.LeftButton == MouseButtonState.Pressed)
             {
+                e.Handled = true;
                 var mousePosition = e.GetPosition(this);
                 double offsetX = mousePosition.X;
                 double offsetY = mousePosition.Y;
@@ -350,6 +389,7 @@ namespace ExpandScadaEditor.ScreenEditor.Items
         {
             if (e.LeftButton == MouseButtonState.Pressed)
             {
+                e.Handled = true;
                 var mousePosition = e.GetPosition(this);
                 double offsetX = mousePosition.X;
                 
@@ -366,6 +406,7 @@ namespace ExpandScadaEditor.ScreenEditor.Items
         {
             if (e.LeftButton == MouseButtonState.Pressed)
             {
+                e.Handled = true;
                 var mousePosition = e.GetPosition(this);
                 double offsetY = mousePosition.Y;
                 if (this.ActualHeight - offsetY > 0 && this.coordY + offsetY >= 0)
@@ -381,6 +422,7 @@ namespace ExpandScadaEditor.ScreenEditor.Items
         {
             if (e.LeftButton == MouseButtonState.Pressed)
             {
+                e.Handled = true;
                 var mousePosition = e.GetPosition(this);
                 OnElementResizing(this, new ResizingEventArgs
                 {
@@ -395,6 +437,7 @@ namespace ExpandScadaEditor.ScreenEditor.Items
         {
             if (e.LeftButton == MouseButtonState.Pressed)
             {
+                e.Handled = true;
                 var mousePosition = e.GetPosition(this);
                 OnElementResizing(this, new ResizingEventArgs
                 {

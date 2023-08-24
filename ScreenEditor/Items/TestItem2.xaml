@@ -15,6 +15,7 @@
         <TextBlock Text="Hello there" Width="auto" Height="auto" Background="DarkCyan" TextAlignment="Center" FontSize="20"/>
         <helpers:MouseOverElementBorder x:Name="COVER_BORDER"/>
         <helpers:ElementResizingBorder x:Name="RESIZE_BORDER"/>
+        <helpers:ElementMovingBorder x:Name="MOVING_BORDER"/>
         
     </Grid>
 </local:ScreenElement>
