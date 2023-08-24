@@ -68,7 +68,7 @@ namespace ExpandScadaEditor.ScreenEditor
      *      
      *   +++MOVE GROUP OF ELEMENTS
      *            
-     *      MOVING WITH COPYING FOR GROUP OF ELEMENTS
+     *   +++MOVING WITH COPYING FOR GROUP OF ELEMENTS
      *      
      *      ADD SCROLLBARS IF WORKSPACE BIGGER THEN WINDOW
      *      
@@ -119,20 +119,23 @@ namespace ExpandScadaEditor.ScreenEditor
         const string SELECTING_RECTANGLE = "SELECTING_RECTANGLE";
         //const string SELECTED_RECTANGLE = "SELECTED_RECTANGLE";
 
-        MouseMovingMode CurrentMouseMovingMode = MouseMovingMode.None;
+        //MouseMovingMode CurrentMouseMovingMode = MouseMovingMode.None;
 
         protected VectorEditorVM VM
         {
             get { return (VectorEditorVM)Resources["ViewModel"]; }
         }
 
-        
+
         //ScreenElement SelectedElement { get; set; }
 
         //Dictionary<string, ScreenElement> SelectedElements = new Dictionary<string, ScreenElement>();
 
+        List<(int id, double xCoord, double yCoord)> selectedPositionsBeforeMoving = new List<(int id, double xCoord, double yCoord)>();
+        MouseMovingMode preMode = MouseMovingMode.None;
         ScreenElement tmpPreSelectedElement = new ScreenElement();
         int selectedElementIndexByMouse = -1;
+        List<ScreenElement> TmpFollowerElements = new List<ScreenElement>();
 
         double SelectedElementMousePressedCoordX { get; set; }
         double SelectedElementMousePressedCoordY { get; set; }
@@ -141,7 +144,7 @@ namespace ExpandScadaEditor.ScreenEditor
         ElementsSelectingBorder borderSelecting;
 
         ScreenElement elementFromCatalog;
-        ScreenElement tmpElementFromCatalog;
+        //ScreenElement tmpElementFromCatalog;
         bool elementFromCatalogMoved = false;
 
         public VectorEditor()
@@ -228,52 +231,30 @@ namespace ExpandScadaEditor.ScreenEditor
                 //transform.X = Mouse.GetPosition(WorkSpace).X;
                 //transform.Y = Mouse.GetPosition(WorkSpace).Y;
 
+                // !!! ATTENTION !!! we decide that here elementFromCatalog can be only one, so we will use only first element in follower tmp list
+
                 Point point = new Point(Mouse.GetPosition(WorkSpace).X, Mouse.GetPosition(WorkSpace).Y);
 
                 if (!elementFromCatalogMoved)
                 {
-                    // create new element on the CANVAS layer and set opacity 0,5 and -1 ID
                     elementFromCatalogMoved = true;
-
-                    var type = elementFromCatalog.GetType();
-                    tmpElementFromCatalog = (ScreenElement)Activator.CreateInstance(type);
-                    tmpElementFromCatalog.Id = -1;
-                    tmpElementFromCatalog.Name = "TMP_FOLLOWER";
-                    tmpElementFromCatalog.Opacity = 0.5;
-                    tmpElementFromCatalog.CoordX = point.X;
-                    tmpElementFromCatalog.CoordY = point.Y;
-
-
-                    //tmpElementFromCatalog.CatalogMode = true;
-
-
-
-                    WorkSpace.Children.Add(tmpElementFromCatalog);
-                    Canvas.SetLeft(tmpElementFromCatalog, tmpElementFromCatalog.CoordX);
-                    Canvas.SetTop(tmpElementFromCatalog, tmpElementFromCatalog.CoordY);
+                    // create new element on the CANVAS layer and set opacity 0,5 and -1 ID
+                    // we can set coordinates to catalog's element, because we've copied it
+                    elementFromCatalog.CoordX = point.X;
+                    elementFromCatalog.CoordY = point.Y;
+                    CreateTmpElementsWithOpacity(new List<ScreenElement>() { elementFromCatalog });
 
                     ElementCatalog.Cursor = Cursors.SizeAll;
                     Cursor = Cursors.SizeAll;
                 }
                 else
                 {
-                    tmpElementFromCatalog.CoordX = point.X;
-                    tmpElementFromCatalog.CoordY = point.Y;
-                    Canvas.SetLeft(tmpElementFromCatalog, tmpElementFromCatalog.CoordX);
-                    Canvas.SetTop(tmpElementFromCatalog, tmpElementFromCatalog.CoordY);
+                    TmpFollowerElements[0].CoordX = point.X;
+                    TmpFollowerElements[0].CoordY = point.Y;
+                    Canvas.SetLeft(TmpFollowerElements[0], TmpFollowerElements[0].CoordX);
+                    Canvas.SetTop(TmpFollowerElements[0], TmpFollowerElements[0].CoordY);
                 }
-
-                // move this element on the same layer, follow the cursor
-
-                
-                //this.Samplebutton.RenderTransform = transform;
-
-
-
             }
-            //elementFromCatalogMoved = true;
-
-
         }
 
         private void ElementCatalog_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
@@ -283,19 +264,16 @@ namespace ExpandScadaEditor.ScreenEditor
                 if (elementFromCatalogMoved)
                 {
                     elementFromCatalogMoved = false;
-
-                    if (tmpElementFromCatalog.CoordX > 0 && tmpElementFromCatalog.CoordX < WorkSpace.ActualWidth
-                        && tmpElementFromCatalog.CoordY > 0 && tmpElementFromCatalog.CoordY < WorkSpace.ActualHeight)
+                    if (TmpFollowerElements[0].CoordX > 0 && TmpFollowerElements[0].CoordX < WorkSpace.ActualWidth
+                    && TmpFollowerElements[0].CoordY > 0 && TmpFollowerElements[0].CoordY < WorkSpace.ActualHeight)
                     {
-                        elementFromCatalog.CoordX = tmpElementFromCatalog.CoordX;
-                        elementFromCatalog.CoordY = tmpElementFromCatalog.CoordY;
-                        WorkSpace.Children.Remove(tmpElementFromCatalog);
-                        tmpElementFromCatalog = null;
+                        elementFromCatalog.CoordX = TmpFollowerElements[0].CoordX;
+                        elementFromCatalog.CoordY = TmpFollowerElements[0].CoordY;
+                        RemoveTmpElementsWithOpacity();
                     }
                     else
                     {
-                        WorkSpace.Children.Remove(tmpElementFromCatalog);
-                        tmpElementFromCatalog = null;
+                        RemoveTmpElementsWithOpacity();
                         elementFromCatalog = null;
                         Cursor = Cursors.Arrow;
                         return;
@@ -478,10 +456,30 @@ namespace ExpandScadaEditor.ScreenEditor
             }
             else
             {
-                SelectedElementsToResizingMode();
-                // At the end of the moving - invoke new user action for undoredo
-                VM.UndoRedo.NewUserAction(VM.ElementsOnWorkSpace);
-                //VM.UndoRedo.NewUserAction(VM.SelectedElements);
+                if (TmpFollowerElements.Count > 0)
+                {
+                    // elements were copied
+                    var newElementsList = VM.CopyElementsInList(VM.SelectedElements);
+                    for (int i = 0; i < newElementsList.Count; i++)
+                    {
+                        newElementsList[i].Name = null;
+                        newElementsList[i].CoordX = TmpFollowerElements[i].CoordX;
+                        newElementsList[i].CoordY = TmpFollowerElements[i].CoordY;
+                        VM.AddNewScreenElement(newElementsList[i]);
+                    }
+
+                    VM.UndoRedo.NewUserAction(VM.ElementsOnWorkSpace, UndoRedoActionType.Create);
+                    RemoveTmpElementsWithOpacity();
+                    VM_SelectTheseElements(null, new ScreenElementsEventArgs() { Elements = newElementsList });
+                }
+                else
+                {
+                    // elements were moved
+                    SelectedElementsToResizingMode();
+                    // At the end of the moving - invoke new user action for undoredo
+                    VM.UndoRedo.NewUserAction(VM.ElementsOnWorkSpace);
+                }
+                
             }
 
             elementsWereMoved = false;
@@ -513,26 +511,35 @@ namespace ExpandScadaEditor.ScreenEditor
             VM.MouseX = mousePosition.X;
             VM.MouseY = mousePosition.Y;
             //---------------------------
+            MouseMovingMode currentMouseMovingMode = MouseMovingMode.None;
 
             if (e.LeftButton == MouseButtonState.Pressed && borderSelecting != null)
             {
-                CurrentMouseMovingMode = MouseMovingMode.Selecting;
+                currentMouseMovingMode = MouseMovingMode.Selecting;
             }
             else if(e.LeftButton == MouseButtonState.Pressed && VM.SelectedElements.Count != 0)
             {
-                CurrentMouseMovingMode = MouseMovingMode.MoveSelectedElements;
+                if (Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl))
+                {
+                    currentMouseMovingMode = MouseMovingMode.CopyDuringMoving;
+                }
+                else
+                {
+                    currentMouseMovingMode = MouseMovingMode.MoveSelectedElements;
+                }
             }           
-            else
-            {
-                CurrentMouseMovingMode = MouseMovingMode.None;
-            }
 
-            MouseMovingEffects(mousePosition);
+            MouseMovingEffects(mousePosition, currentMouseMovingMode);
         }
 
-        void MouseMovingEffects(Point currentPosition)
+        void MouseMovingEffects(Point currentPosition, MouseMovingMode currentMovingMode)
         {
-            switch (CurrentMouseMovingMode)
+            if (VM.SelectedElements.Count > 0 && !elementsWereMoved)
+            {
+                VM.SelectedElements.ForEach(x => selectedPositionsBeforeMoving.Add((x.Id, x.CoordX, x.CoordY)));
+            }
+
+            switch (currentMovingMode)
             {
                 case MouseMovingMode.MoveSelectedElements:
                     if (!elementsWereMoved)
@@ -541,52 +548,56 @@ namespace ExpandScadaEditor.ScreenEditor
                         elementsWereMoved = true;
                     }
 
-                    double newPositionX = currentPosition.X - SelectedElementMousePressedCoordX;
-                    double newPositionY = currentPosition.Y - SelectedElementMousePressedCoordY;
-
-                    if (selectedElementIndexByMouse < 0)
+                    if (currentMovingMode != preMode)
                     {
-                        return;
+                        RemoveTmpElementsWithOpacity();
                     }
 
-                    double offsetX = newPositionX - VM.SelectedElements[selectedElementIndexByMouse].CoordX;
-                    double offsetY = newPositionY - VM.SelectedElements[selectedElementIndexByMouse].CoordY;
+                    ChangeCoorditanesOnMoving(VM.SelectedElements, currentPosition,
+                        selectedElementIndexByMouse,
+                        SelectedElementMousePressedCoordX, SelectedElementMousePressedCoordY);
 
-                    // calculate offset for pressed element for new coordinates
-                    // use this offset for each selected element - calculate new coordinates
-                    // set new coordinates for each element
-
-                    // check for each element the border of workspace. If border reached - break
-                    // we can move one element a little off the board, but if there is a group - nonono
-                    if (VM.SelectedElements.Count == 1)
+                    break;
+                case MouseMovingMode.CopyDuringMoving:
+                    /*  put above first enterance and save start position of each selected element
+                     *  use preMode here, update after each cycle in the bottom
+                     *  if pre mode is different then 
+                     *      - for moving - set all selected elements new coordinates and delete tmp elements if they are exist
+                     *      - for copying - set all selected element old coordinates and create new elements with opacity, put them to tmp container
+                     *  on mouse up event
+                     *      - if tmp container is not empty - create new elements on these positions
+                     *      - if empty - react like on regular moving
+                     * */
+                    if (!elementsWereMoved)
                     {
-                        if (currentPosition.X >= WorkSpace.ActualWidth || currentPosition.X <= 0
-                           || currentPosition.Y >= WorkSpace.ActualHeight || currentPosition.Y <= 0)
-                        {
-                            return;
-                        }
+                        SelectedElementsToMovingMode();
+                        elementsWereMoved = true;
                     }
-                    else
+
+                    if (currentMovingMode != preMode)
                     {
+                        // create tmp followers
+                        CreateTmpElementsWithOpacity(VM.SelectedElements);
+
+                        //set all selected element old coordinates and create new elements with opacity, put them to tmp container
                         foreach (var element in VM.SelectedElements)
                         {
-                            if (element.CoordX + offsetX + element.ActualWidth >= WorkSpace.ActualWidth
-                                || element.CoordY + offsetY + element.ActualHeight >= WorkSpace.ActualHeight
-                                || element.CoordX + offsetX <= 0 || element.CoordY + offsetY <= 0)
+                            var coords = selectedPositionsBeforeMoving.Find(x => x.id == element.Id);
+                            if (double.IsNaN(coords.xCoord) || double.IsNaN(coords.yCoord))
                             {
-                                return;
+                                continue;
                             }
+                            element.CoordX = coords.xCoord;
+                            element.CoordY = coords.yCoord;
+                            Canvas.SetLeft(element, element.CoordX);
+                            Canvas.SetTop(element, element.CoordY);
                         }
                     }
 
-                    // set new coordinates for each element
-                    foreach (var element in VM.SelectedElements)
-                    {
-                        element.CoordX += offsetX;
-                        element.CoordY += offsetY;
-                        Canvas.SetLeft(element, element.CoordX);
-                        Canvas.SetTop(element, element.CoordY);
-                    }
+                    ChangeCoorditanesOnMoving(TmpFollowerElements, currentPosition,
+                        selectedElementIndexByMouse,
+                        SelectedElementMousePressedCoordX, SelectedElementMousePressedCoordY);
+
 
                     break;
                 case MouseMovingMode.Selecting:
@@ -602,6 +613,8 @@ namespace ExpandScadaEditor.ScreenEditor
                     }
                     break;
             }
+
+            preMode = currentMovingMode;
         }
 
 
@@ -848,11 +861,6 @@ namespace ExpandScadaEditor.ScreenEditor
                             command = VM.Cut;
                             break;
                     }
-
-                    if (command != null && command.CanExecute(null))
-                    {
-                        command.Execute(null);
-                    }
                 }
             }
             else if (e.Key == Key.Delete)
@@ -889,11 +897,11 @@ namespace ExpandScadaEditor.ScreenEditor
                 VM.UndoRedo.NewUserAction(VM.ElementsOnWorkSpace);
             }
 
-
-            
-
+            if (command != null && command.CanExecute(null))
+            {
+                command.Execute(null);
+            }
         }
-
 
         bool CanMoveElements(List<ScreenElement> elementsToMove, Key direction)
         {
@@ -931,6 +939,88 @@ namespace ExpandScadaEditor.ScreenEditor
 
             return canMove;
                 
+        }
+
+        void CreateTmpElementsWithOpacity(List<ScreenElement> copyFromElements)
+        {
+            for (int i = 0; i < copyFromElements.Count; i++)  
+            {
+                var type = copyFromElements[i].GetType();
+                var tmpElement = (ScreenElement)Activator.CreateInstance(type);
+                tmpElement.Id = -9999 + i;
+                tmpElement.Name = $"TMP_FOLLOWER_{i}";
+                tmpElement.Opacity = 0.5;
+                tmpElement.CoordX = copyFromElements[i].CoordX;
+                tmpElement.CoordY = copyFromElements[i].CoordY;
+
+                tmpElement.MouseLeftButtonUp += Element_MouseLeftButtonUp;
+
+                TmpFollowerElements.Add(tmpElement);
+
+                WorkSpace.Children.Add(tmpElement);
+                Canvas.SetLeft(tmpElement, tmpElement.CoordX);
+                Canvas.SetTop(tmpElement, tmpElement.CoordY);
+            }
+        }
+
+        void RemoveTmpElementsWithOpacity()
+        {
+            TmpFollowerElements.ForEach(x => WorkSpace.Children.Remove(x));
+            TmpFollowerElements.Clear();
+        }
+
+
+        void ChangeCoorditanesOnMoving(List<ScreenElement> movingElements,
+            Point currentPosition,
+            int selectedElementIndexByMouse,
+            double coordPressedOnElementX, double coordPressedOnElementY)
+        {
+            double newPositionX = currentPosition.X - coordPressedOnElementX;
+            double newPositionY = currentPosition.Y - coordPressedOnElementY;
+
+            if (selectedElementIndexByMouse < 0)
+            {
+                return;
+            }
+
+            double offsetX = newPositionX - movingElements[selectedElementIndexByMouse].CoordX;
+            double offsetY = newPositionY - movingElements[selectedElementIndexByMouse].CoordY;
+
+            // calculate offset for pressed element for new coordinates
+            // use this offset for each selected element - calculate new coordinates
+            // set new coordinates for each element
+
+            // check for each element the border of workspace. If border reached - break
+            // we can move one element a little off the board, but if there is a group - nonono
+            if (movingElements.Count == 1)
+            {
+                if (currentPosition.X >= WorkSpace.ActualWidth || currentPosition.X <= 0
+                   || currentPosition.Y >= WorkSpace.ActualHeight || currentPosition.Y <= 0)
+                {
+                    return;
+                }
+            }
+            else
+            {
+                foreach (var element in movingElements)
+                {
+                    if (element.CoordX + offsetX + element.ActualWidth >= WorkSpace.ActualWidth
+                        || element.CoordY + offsetY + element.ActualHeight >= WorkSpace.ActualHeight
+                        || element.CoordX + offsetX <= 0 || element.CoordY + offsetY <= 0)
+                    {
+                        return;
+                    }
+                }
+            }
+
+            // set new coordinates for each element
+            foreach (var element in movingElements)
+            {
+                element.CoordX += offsetX;
+                element.CoordY += offsetY;
+                Canvas.SetLeft(element, element.CoordX);
+                Canvas.SetTop(element, element.CoordY);
+            }
         }
 
     }

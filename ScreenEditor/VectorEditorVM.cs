@@ -442,7 +442,7 @@ namespace ExpandScadaEditor.ScreenEditor
             return (XEnabled, YEnabled);
         }
 
-        List<ScreenElement> CopyElementsInList(List<ScreenElement> elements)
+        public List<ScreenElement> CopyElementsInList(List<ScreenElement> elements)
         {
             List<ScreenElement> result = new List<ScreenElement>();
             foreach (var element in elements)

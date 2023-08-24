@@ -19,7 +19,7 @@ namespace ExpandScadaEditor.ScreenEditor
         None,
         MoveSelectedElements,
         Selecting,
-
+        CopyDuringMoving
     }
 
     public enum MouseSelectingDirection
