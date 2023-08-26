@@ -76,9 +76,17 @@ namespace ExpandScadaEditor.ScreenEditor
      *      
      *   +++SHOW EMPTYNESS IF WINDOW IS BIGGER THEN WORKSPACE
      *      
-     *      MOVING OPERATIONS ONLY INSIDE OF THE REAL WORKSPACE
+     *   +++MOVING OPERATIONS ONLY INSIDE OF THE REAL WORKSPACE
      *      
-     *      SCROLL WORKSPACE DURING THE MOVING
+     *   !!!SCROLL WORKSPACE DURING THE MOVING
+     *          - For selecting works perfect: if we on the side of workspace - move event call itself automatically and we move
+     *          - For moving element and resizing doesn't work - we have to move a mouse all the time if we want to move whole workspace
+     *              - This is because of some event rising tricks. But this is not clear at all.. Have to make a lot of tests to find solution...
+     *          - CHECK NEW SOLUTION:
+     *              - catch moving events only from WS. 
+     *              - react on mouse down events only and build whole logic based on this beginning.
+     *              - 
+     *      
      *      
      *      CREATE ZOOM FUNCTIONS: TOOLS/MOUSE WHEEL + CTRL...
      *      
@@ -505,6 +513,11 @@ namespace ExpandScadaEditor.ScreenEditor
 
         private void WorkSpace_MouseMove(object sender, MouseEventArgs e)
         {
+            //if (e.Source != WorkSpace)
+            //{
+            //    ScrollOnMoving(e.GetPosition(WorkSpace));
+            //}
+
             //--- test / delete later ---
             var mousePosition = e.GetPosition(WorkSpace);
             VM.MouseX = mousePosition.X;
@@ -537,10 +550,11 @@ namespace ExpandScadaEditor.ScreenEditor
             {
                 VM.SelectedElements.ForEach(x => selectedPositionsBeforeMoving.Add((x.Id, x.CoordX, x.CoordY)));
             }
-
+            //VM.MouseOverElement = $"+++++++++++++++++++++{DateTime.Now.ToString("fff")}";
             switch (currentMovingMode)
             {
                 case MouseMovingMode.MoveSelectedElements:
+                    //ScrollOnMoving(currentPosition);
                     if (!elementsWereMoved)
                     {
                         SelectedElementsToMovingMode();
@@ -556,6 +570,7 @@ namespace ExpandScadaEditor.ScreenEditor
                         selectedElementIndexByMouse,
                         SelectedElementMousePressedCoordX, SelectedElementMousePressedCoordY);
 
+                    
                     break;
                 case MouseMovingMode.CopyDuringMoving:
                     if (!elementsWereMoved)
@@ -563,6 +578,8 @@ namespace ExpandScadaEditor.ScreenEditor
                         SelectedElementsToMovingMode();
                         elementsWereMoved = true;
                     }
+
+                    //ScrollOnMoving(currentPosition);
 
                     if (currentMovingMode != preMode)
                     {
@@ -591,13 +608,15 @@ namespace ExpandScadaEditor.ScreenEditor
                 case MouseMovingMode.Selecting:
                     if (borderSelecting != null)
                     {
+                        ScrollOnMoving(currentPosition);
+
                         // redraw border
                         borderSelecting.ContinueSelection(currentPosition);
 
                         // selecting 
                         ActualizeElementsCoveredBySelection();
 
-
+                        //VM.MouseOverElement = $"____________________________________________________________________________-{DateTime.Now.ToString("fff")}";
                     }
                     break;
             }
@@ -977,6 +996,7 @@ namespace ExpandScadaEditor.ScreenEditor
             double offsetX = newPositionX - movingElements[selectedElementIndexByMouse].CoordX;
             double offsetY = newPositionY - movingElements[selectedElementIndexByMouse].CoordY;
 
+
             // calculate offset for pressed element for new coordinates
             // use this offset for each selected element - calculate new coordinates
             // set new coordinates for each element
@@ -1012,6 +1032,36 @@ namespace ExpandScadaEditor.ScreenEditor
                 Canvas.SetLeft(element, element.CoordX);
                 Canvas.SetTop(element, element.CoordY);
             }
+        }
+
+        void ScrollOnMoving(Point currentMousePosition)
+        {
+            /*  Call this method in the end of every moving cycle
+             *      - creating new item from catalog
+             *      - copy & move
+             *      - selecting
+             *      - moving
+             *      - resizing
+             *  check if mouse pointer is out of shown workspace area
+             *      - if workspace can be moved - move it on 5 px or less if there is no 5 px left
+             *      - check if holding position can continue moving. If not 
+             *          - try recurse 
+             *      - check if every item is still moving too
+             * 
+             * 
+             * */
+
+            if (currentMousePosition.X >= WSScroller.ViewportWidth - WSScroller.HorizontalOffset - 10)
+            {
+                WSScroller.ScrollToHorizontalOffset(WSScroller.HorizontalOffset + 0.5);
+            }
+
+
+            var fff = this.WSScroller;
+            var viewportH = WSScroller.ViewportHeight;
+            var viewportW = WSScroller.ViewportWidth;
+            var verticalOffset = WSScroller.VerticalOffset; // from left
+            var horizontalOffset = WSScroller.HorizontalOffset; // from top
         }
 
         private void ScrollViewer_PreviewMouseWheel(object sender, MouseWheelEventArgs e)
