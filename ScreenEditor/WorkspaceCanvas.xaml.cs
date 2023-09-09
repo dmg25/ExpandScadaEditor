@@ -797,6 +797,44 @@ namespace ExpandScadaEditor.ScreenEditor
         }
 
 
+        internal bool CanMoveElements(List<ScreenElement> elementsToMove, Key direction)
+        {
+            bool canMove = true;
+            foreach (var element in elementsToMove)
+            {
+                switch (direction)
+                {
+                    case Key.Right:
+                        if (element.CoordX + element.ActualWidth >= this.ActualWidth)
+                        {
+                            canMove = false;
+                        }
+                        break;
+                    case Key.Down:
+                        if (element.CoordY + element.ActualHeight >= this.ActualHeight)
+                        {
+                            canMove = false;
+                        }
+                        break;
+                    case Key.Left:
+                        if (element.CoordX <= 0)
+                        {
+                            canMove = false;
+                        }
+                        break;
+                    case Key.Up:
+                        if (element.CoordY <= 0)
+                        {
+                            canMove = false;
+                        }
+                        break;
+                }
+            }
+
+            return canMove;
+
+        }
+
 
         void ScrollOnMoving(Point currentMousePosition)
         {
