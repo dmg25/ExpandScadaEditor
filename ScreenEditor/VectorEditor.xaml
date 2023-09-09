@@ -48,6 +48,8 @@
                 <Button Content="Paste" Command="{Binding Paste}" Focusable="False"/>
                 <Button Content="SelectAll" Command="{Binding SelectAll}" Focusable="False"/>
                 <Button Content="Cut" Command="{Binding Cut}" Focusable="False"/>
+                <Button Content="ZoomIn" Command="{Binding ZoomIn}" Focusable="False"/>
+                <Button Content="ZoomOut" Command="{Binding ZoomOut}" Focusable="False"/>
             </ToolBar>
             
             

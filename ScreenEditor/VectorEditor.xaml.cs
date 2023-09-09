@@ -82,13 +82,28 @@ namespace ExpandScadaEditor.ScreenEditor
      *          - For selecting works perfect: if we on the side of workspace - move event call itself automatically and we move
      *          - For moving element and resizing doesn't work - we have to move a mouse all the time if we want to move whole workspace
      *              - This is because of some event rising tricks. But this is not clear at all.. Have to make a lot of tests to find solution...
-     *          - CHECK NEW SOLUTION:
-     *              - catch moving events only from WS. 
-     *              - react on mouse down events only and build whole logic based on this beginning.
-     *              - 
+     *          PROBLEM
+     *              - On element moving event of moving works not so good because of mouse capture state focused on element automatically
+     *              - If we write WorkSpace.CaptureMouse() on mouse down event - moving works perfect
+     *              - !!! BUT !!! on mouse Up event we will see source as canvas EVERY TIME. So this is a problem we have to solve carefully
      *      
      *      
-     *      CREATE ZOOM FUNCTIONS: TOOLS/MOUSE WHEEL + CTRL...
+     *   ###CREATE ZOOM FUNCTIONS: TOOLS/MOUSE WHEEL + CTRL...
+     *          - Create  + and - commands for zooming
+     *          - each step of this command must change zoom lets say on 10%
+     *          - For rendering use original element's settings, but user has to see properties for him only (without scaling)
+     *            Create double properties
+     *          - Changing properties
+     *              - Width/Height
+     *              - X/Y coordinates
+     *              - Text font
+     *              - Line thickness? 
+     *              - Resize borders (???)
+     *          - Add scrollbar to the bottom for resizing
+     *      
+     *      
+     *      
+     *      
      *      
      *   +++UNDO/REDO user's action
      *      
@@ -172,7 +187,8 @@ namespace ExpandScadaEditor.ScreenEditor
             VM.ScreenElementReplaced += VM_ScreenElementReplaced;
             VM.ScreenElementDeleted += VM_ScreenElementDeleted;
             VM.SelectedElementsDeleted += VM_SelectedElementsDeleted;
-            VM.SelectTheseElements += VM_SelectTheseElements; 
+            VM.SelectTheseElements += VM_SelectTheseElements;
+            VM.ZoomChanged += VM_ZoomChanged;
             VM.Initialize();
 
             WorkSpace.MouseLeftButtonDown += WorkSpace_MouseLeftButtonDown;
@@ -190,6 +206,11 @@ namespace ExpandScadaEditor.ScreenEditor
             ElementCatalog.MouseMove += ElementCatalog_MouseMove;
 
            
+        }
+
+        private void VM_ZoomChanged(object sender, EventArgs e)
+        {
+
         }
 
         private void VM_SelectTheseElements(object sender, ScreenElementsEventArgs e)
@@ -351,6 +372,33 @@ namespace ExpandScadaEditor.ScreenEditor
 
         private void Element_OnElementResizing(object sender, ResizingEventArgs e)
         {
+            /*  Zoom and resizing 
+             *      - send every time actual width/height to elements on canvas (just in properties)
+             *          - send them on creation too (maybe create special methid aka "actualize to current world")
+             *          - create also new ersatz properties and use them
+             *          - do the same for zoom coef
+             *          - BUT NOT HERE - in VM
+             *      - ??? what do we do if we changed size of workspace, but there are some elements close to border?
+             *          - probably nothing - let them be out of range, just be sure - no crush
+             *          - and we have to be able to see tree of elements - find them and change position
+             *      - Move as must as possible action to element itself. e.g. 100% resiting functions
+             *          - moving make here as short as possible
+             *          
+             *      
+             * 
+             * 
+             * 
+             * 
+             * 
+             * 
+             * */
+
+
+
+
+
+
+
             var element = sender as ScreenElement;
             switch (e.ResizingType)
             {

@@ -95,6 +95,116 @@ namespace ExpandScadaEditor.ScreenEditor.Items
             }
         }
 
+        private double zoomCoef = 1;
+        public double ZoomCoef
+        {
+            get
+            {
+                return zoomCoef;
+            }
+            set
+            {
+                if (value <= 0)
+                {
+                    return;
+                }
+
+                //if (zoomCoef != value)
+                //{
+                    ChangeZoom(value);
+                //}
+                zoomCoef = value;
+                //NotifyPropertyChanged();
+            }
+        }
+
+        private double workspaceHeight;
+        public double WorkspaceHeight
+        {
+            get
+            {
+                return workspaceHeight;
+            }
+            set
+            {
+                workspaceHeight = value;
+                //NotifyPropertyChanged();
+            }
+        }
+
+        private double workspaceWidth;
+        public double WorkspaceWidth
+        {
+            get
+            {
+                return workspaceWidth;
+            }
+            set
+            {
+                workspaceWidth = value;
+                //NotifyPropertyChanged();
+            }
+        }
+
+
+        //private double coordXOriginal;
+        //public double CoordXOriginal
+        //{
+        //    get
+        //    {
+        //        return coordXOriginal;
+        //    }
+        //    set
+        //    {
+        //        coordXOriginal = value;
+        //        //NotifyPropertyChanged();
+        //    }
+        //}
+
+        //private double coordYOriginal;
+        //public double CoordYOriginal
+        //{
+        //    get
+        //    {
+        //        return coordYOriginal;
+        //    }
+        //    set
+        //    {
+        //        coordYOriginal = value;
+        //        //NotifyPropertyChanged();
+        //    }
+        //}
+
+        private double width;
+        public new double Width
+        {
+            get
+            {
+                return width;
+            }
+            set
+            {
+                width = value;
+                base.Width = Width * ZoomCoef;
+                //NotifyPropertyChanged();
+            }
+        }
+
+        private double height;
+        public new double Height
+        {
+            get
+            {
+                return height;
+            }
+            set
+            {
+                height = value;
+                base.Height = Height * ZoomCoef;
+                //NotifyPropertyChanged();
+            }
+        }
+
         private bool catalogMode;
         public bool CatalogMode
         {
@@ -241,9 +351,14 @@ namespace ExpandScadaEditor.ScreenEditor.Items
             id = element.id;
             coordX = element.coordX;
             coordY = element.coordY;
-            
-            Width = element.IsLoaded ? element.ActualWidth : element.Width;
-            Height = element.IsLoaded ? element.ActualHeight : element.Height;
+
+
+            Width = element.IsLoaded ? element.ActualWidth / element.zoomCoef : element.Width;
+            Height = element.IsLoaded ? element.ActualHeight / element.zoomCoef : element.Height;
+            // Zooming experiments
+            //Width = element.Width;
+            //Height = element.Height;
+
             Name = element.Name;
            // ToDelete = element.ToDelete;
             
@@ -463,7 +578,28 @@ namespace ExpandScadaEditor.ScreenEditor.Items
             e.Handled = true;
         }
 
+        private void ChangeZoom(double scaleCoef)
+        {
 
+            /*
+             * - Changing properties
+     *              - Width/Height
+     *              - X/Y coordinates
+     *              - Text font
+     *              - Line thickness? 
+     *              - Resize borders (???)
+             * */
+
+            //ZoomCoef = scaleCoef;
+
+            base.Width = Width * scaleCoef;
+            base.Height = Height * scaleCoef;
+
+
+
+
+
+        }
 
         static bool PropertiesAreEqual(ScreenElement elementA, ScreenElement elementB)
         {

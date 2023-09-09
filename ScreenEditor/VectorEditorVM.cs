@@ -38,6 +38,7 @@ namespace ExpandScadaEditor.ScreenEditor
         public event EventHandler SelectedElementsDeleted;
         public event EventHandler<ReplacingElementEventArgs> ScreenElementReplaced;
         public event EventHandler<ScreenElementsEventArgs> SelectTheseElements;
+        public event EventHandler ZoomChanged;
 
         internal List<ScreenElement> SelectedElements = new List<ScreenElement>();
         //internal Dictionary<int, ScreenElement> SelectedElements = new Dictionary<int, ScreenElement>();
@@ -68,6 +69,21 @@ namespace ExpandScadaEditor.ScreenEditor
             set
             {
                 mouseX = value;
+                NotifyPropertyChanged();
+            }
+        }
+
+        private double zoomCoef = 1;
+        public double ZoomCoef
+        {
+            get
+            {
+                return zoomCoef;
+            }
+            set
+            {
+                zoomCoef = value;
+                ChangeZoomForAllElements(zoomCoef);
                 NotifyPropertyChanged();
             }
         }
@@ -339,6 +355,41 @@ namespace ExpandScadaEditor.ScreenEditor
             }
         }
 
+        private Command zoomIn;
+        public Command ZoomIn
+        {
+            get
+            {
+                return zoomIn ??
+                    (zoomIn = new Command(obj =>
+                    {
+                        ZoomCoef += 0.1;
+                        ZoomChanged(null, new EventArgs());
+                    },
+                    obj =>
+                    {
+                        return true;
+                    }));
+            }
+        }
+
+        private Command zoomOut;
+        public Command ZoomOut
+        {
+            get
+            {
+                return zoomOut ??
+                    (zoomOut = new Command(obj =>
+                    {
+                        ZoomCoef -= 0.1;
+                        ZoomChanged(null, new EventArgs());
+                    },
+                    obj =>
+                    {
+                        return ZoomCoef > 0.1;
+                    }));
+            }
+        }
 
 
         public VectorEditorVM()
@@ -371,11 +422,12 @@ namespace ExpandScadaEditor.ScreenEditor
 
         public void AddNewScreenElement(ScreenElement element, bool useOldId = false)
         {
+            element.ZoomCoef = ZoomCoef;
             if (!useOldId)
             {
                 int newId = idForNewScreenElement++;
                 element.Id = newId;
-
+               
                 if (string.IsNullOrWhiteSpace(element.Name) || string.IsNullOrEmpty(element.Name))
                 {
                     element.Name = $"element_{element.Id}";
@@ -395,6 +447,7 @@ namespace ExpandScadaEditor.ScreenEditor
         {
             if (ElementsOnWorkSpace.ContainsKey(element.Id))
             {
+                element.ZoomCoef = ZoomCoef;
                 var oldElement = ElementsOnWorkSpace[element.Id];
                 ElementsOnWorkSpace.Remove(element.Id);
                 ElementsOnWorkSpace.Add(element.Id, element);
@@ -453,6 +506,14 @@ namespace ExpandScadaEditor.ScreenEditor
                 result.Add(newItem);
             }
             return result;
+        }
+
+        void ChangeZoomForAllElements(double zoomCoef)
+        {
+            foreach (var pair in ElementsOnWorkSpace)
+            {
+                pair.Value.ZoomCoef = zoomCoef;
+            }
         }
 
         public event PropertyChangedEventHandler PropertyChanged;
