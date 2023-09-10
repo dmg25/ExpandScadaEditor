@@ -83,7 +83,7 @@ namespace ExpandScadaEditor.ScreenEditor
             set
             {
                 zoomCoef = value;
-                ChangeZoomForAllElements(zoomCoef);
+                //ChangeZoomForAllElements(zoomCoef);
                 NotifyPropertyChanged();
             }
         }
@@ -391,6 +391,23 @@ namespace ExpandScadaEditor.ScreenEditor
             }
         }
 
+        private Command resetZoom;
+        public Command ResetZoom
+        {
+            get
+            {
+                return resetZoom ??
+                    (resetZoom = new Command(obj =>
+                    {
+                        ZoomCoef = 1;
+                        ZoomChanged(null, new EventArgs());
+                    },
+                    obj =>
+                    {
+                        return true;
+                    }));
+            }
+        }
 
         public VectorEditorVM()
         {
@@ -508,13 +525,13 @@ namespace ExpandScadaEditor.ScreenEditor
             return result;
         }
 
-        void ChangeZoomForAllElements(double zoomCoef)
-        {
-            foreach (var pair in ElementsOnWorkSpace)
-            {
-                pair.Value.ZoomCoef = zoomCoef;
-            }
-        }
+        //void ChangeZoomForAllElements(double zoomCoef)
+        //{
+        //    foreach (var pair in ElementsOnWorkSpace)
+        //    {
+        //        pair.Value.ZoomCoef = zoomCoef;
+        //    }
+        //}
 
         public event PropertyChangedEventHandler PropertyChanged;
         public virtual void NotifyPropertyChanged([CallerMemberName] string propertyName = "")

@@ -38,7 +38,7 @@ namespace ExpandScadaEditor.ScreenEditor.Items
         public const string COVER_BORDER_NAME = "COVER_BORDER";
         public const string MOVING_BORDER_NAME = "MOVING_BORDER";
 
-        public event EventHandler<ResizingEventArgs> OnElementResizing;
+        //public event EventHandler<ResizingEventArgs> OnElementResizing;
         public event EventHandler ElementSizeChanged;
 
         private int id;
@@ -67,6 +67,35 @@ namespace ExpandScadaEditor.ScreenEditor.Items
         //    }
         //}
 
+
+        private double zoomedCcoordX;
+        public double ZoomedCoordX
+        {
+            get
+            {
+                return zoomedCcoordX;
+            }
+            set
+            {
+                zoomedCcoordX = value;
+                //NotifyPropertyChanged();
+            }
+        }
+
+        private double zoomedCcoordY;
+        public double ZoomedCoordY
+        {
+            get
+            {
+                return zoomedCcoordY;
+            }
+            set
+            {
+                zoomedCcoordY = value;
+                //NotifyPropertyChanged();
+            }
+        }
+
         private double coordX;
         public double CoordX
         {
@@ -77,6 +106,7 @@ namespace ExpandScadaEditor.ScreenEditor.Items
             set
             {
                 coordX = value;
+                ZoomedCoordX = coordX * ZoomCoef;
                 //NotifyPropertyChanged();
             }
         }
@@ -91,6 +121,7 @@ namespace ExpandScadaEditor.ScreenEditor.Items
             set
             {
                 coordY = value;
+                ZoomedCoordY = coordY * ZoomCoef;
                 //NotifyPropertyChanged();
             }
         }
@@ -109,11 +140,16 @@ namespace ExpandScadaEditor.ScreenEditor.Items
                     return;
                 }
 
-                //if (zoomCoef != value)
-                //{
-                    ChangeZoom(value);
-                //}
                 zoomCoef = value;
+
+                base.Width = Width * zoomCoef;
+                base.Height = Height * zoomCoef;
+
+                ZoomedCoordX = CoordX * zoomCoef;
+                ZoomedCoordY = CoordY * zoomCoef;
+                Canvas.SetLeft(this, this.ZoomedCoordX);
+                Canvas.SetTop(this, this.ZoomedCoordY);
+
                 //NotifyPropertyChanged();
             }
         }
@@ -349,10 +385,10 @@ namespace ExpandScadaEditor.ScreenEditor.Items
 
             // TODO!!! These settings must be united to collections in future!!!
             id = element.id;
-            coordX = element.coordX;
-            coordY = element.coordY;
+            CoordX = element.CoordX;
+            CoordY = element.CoordY;
 
-
+            // TODO is it really necessary to use Actual properties?
             Width = element.IsLoaded ? element.ActualWidth / element.zoomCoef : element.Width;
             Height = element.IsLoaded ? element.ActualHeight / element.zoomCoef : element.Height;
             // Zooming experiments
@@ -426,8 +462,8 @@ namespace ExpandScadaEditor.ScreenEditor.Items
             if (e.LeftButton == MouseButtonState.Pressed)
             {
                 e.Handled = true;
-                var mousePosition = e.GetPosition(this);
-                OnElementResizing(this, new ResizingEventArgs
+                var mousePosition = UnzoomCoordinates(e.GetPosition(this));
+                ActualizeResizingOnWorkspace(new ResizingEventArgs
                 {
                     ResizingType = ResizingType.ChangeSize,
                     NewWidth = mousePosition.X > 0 ? mousePosition.X : 1,
@@ -441,16 +477,16 @@ namespace ExpandScadaEditor.ScreenEditor.Items
             if (e.LeftButton == MouseButtonState.Pressed)
             {
                 e.Handled = true;
-                var mousePosition = e.GetPosition(this);
+                var mousePosition = UnzoomCoordinates(e.GetPosition(this));
                 double offsetX = mousePosition.X;
 
-                if (this.ActualWidth - offsetX > 0 && this.coordX + offsetX >= 0)
+                if (this.Width - offsetX > 0 && this.CoordX + offsetX >= 0)
                 {
-                    this.coordX = this.coordX + offsetX;
-                    this.Width = this.ActualWidth - offsetX;
+                    this.CoordX = this.CoordX + offsetX;
+                    this.Width = this.Width - offsetX;
                 }
 
-                OnElementResizing(this, new ResizingEventArgs { 
+                ActualizeResizingOnWorkspace(new ResizingEventArgs { 
                     ResizingType = ResizingType.ChangeSize,
                     NewHeight = mousePosition.Y > 0 ? mousePosition.Y : 1
                 });
@@ -462,15 +498,15 @@ namespace ExpandScadaEditor.ScreenEditor.Items
             if (e.LeftButton == MouseButtonState.Pressed)
             {
                 e.Handled = true;
-                var mousePosition = e.GetPosition(this);
+                var mousePosition = UnzoomCoordinates(e.GetPosition(this));
                 double offsetY = mousePosition.Y;
 
-                if (this.ActualHeight - offsetY > 0 && this.coordY + offsetY >= 0)
+                if (this.Height - offsetY > 0 && this.CoordY + offsetY >= 0)
                 {
-                    this.coordY = this.coordY + offsetY;
-                    this.Height = this.ActualHeight - offsetY;
+                    this.CoordY = this.CoordY + offsetY;
+                    this.Height = this.Height - offsetY;
                 }
-                OnElementResizing(this, new ResizingEventArgs { 
+                ActualizeResizingOnWorkspace(new ResizingEventArgs { 
                     ResizingType = ResizingType.ChangeSize,
                     NewWidth = mousePosition.X > 0 ? mousePosition.X : 1
                 });
@@ -482,21 +518,21 @@ namespace ExpandScadaEditor.ScreenEditor.Items
             if (e.LeftButton == MouseButtonState.Pressed)
             {
                 e.Handled = true;
-                var mousePosition = e.GetPosition(this);
+                var mousePosition = UnzoomCoordinates(e.GetPosition(this));
                 double offsetX = mousePosition.X;
                 double offsetY = mousePosition.Y;
-                if (this.ActualWidth - offsetX > 0 && this.coordX + offsetX >= 0)
+                if (this.Width - offsetX > 0 && this.CoordX + offsetX >= 0)
                 {
-                    this.coordX = this.coordX + offsetX;
-                    this.Width = this.ActualWidth - offsetX;
+                    this.CoordX = this.CoordX + offsetX;
+                    this.Width = this.Width - offsetX;
                 }
 
-                if (this.ActualHeight - offsetY > 0 && this.coordY + offsetY >= 0)
+                if (this.Height - offsetY > 0 && this.CoordY + offsetY >= 0)
                 {
-                    this.coordY = this.coordY + offsetY;
-                    this.Height = this.ActualHeight - offsetY;
+                    this.CoordY = this.CoordY + offsetY;
+                    this.Height = this.Height - offsetY;
                 }
-                OnElementResizing(this, new ResizingEventArgs { ResizingType = ResizingType.ChangeSize });
+                ActualizeResizingOnWorkspace(new ResizingEventArgs { ResizingType = ResizingType.ChangeSize });
             }
         }
 
@@ -505,15 +541,15 @@ namespace ExpandScadaEditor.ScreenEditor.Items
             if (e.LeftButton == MouseButtonState.Pressed)
             {
                 e.Handled = true;
-                var mousePosition = e.GetPosition(this);
+                var mousePosition = UnzoomCoordinates(e.GetPosition(this));
                 double offsetX = mousePosition.X;
                 
-                if (this.ActualWidth - offsetX > 0 && this.coordX + offsetX >= 0)
+                if (this.Width - offsetX > 0 && this.CoordX + offsetX >= 0)
                 {
-                    this.coordX = this.coordX + offsetX;
-                    this.Width = this.ActualWidth - offsetX;
+                    this.CoordX = this.CoordX + offsetX;
+                    this.Width = this.Width - offsetX;
                 }
-                OnElementResizing(this, new ResizingEventArgs {ResizingType = ResizingType.ChangeSize });
+                ActualizeResizingOnWorkspace(new ResizingEventArgs {ResizingType = ResizingType.ChangeSize });
             }
         }
 
@@ -522,14 +558,14 @@ namespace ExpandScadaEditor.ScreenEditor.Items
             if (e.LeftButton == MouseButtonState.Pressed)
             {
                 e.Handled = true;
-                var mousePosition = e.GetPosition(this);
+                var mousePosition = UnzoomCoordinates(e.GetPosition(this));
                 double offsetY = mousePosition.Y;
-                if (this.ActualHeight - offsetY > 0 && this.coordY + offsetY >= 0)
+                if (this.Height - offsetY > 0 && this.CoordY + offsetY >= 0)
                 {
-                    this.coordY = this.coordY + offsetY;
-                    this.Height = this.ActualHeight - offsetY;
+                    this.CoordY = this.CoordY + offsetY;
+                    this.Height = this.Height - offsetY;
                 }
-                OnElementResizing(this, new ResizingEventArgs { ResizingType = ResizingType.ChangeSize });
+                ActualizeResizingOnWorkspace(new ResizingEventArgs { ResizingType = ResizingType.ChangeSize });
             }
         }
 
@@ -538,8 +574,8 @@ namespace ExpandScadaEditor.ScreenEditor.Items
             if (e.LeftButton == MouseButtonState.Pressed)
             {
                 e.Handled = true;
-                var mousePosition = e.GetPosition(this);
-                OnElementResizing(this, new ResizingEventArgs
+                var mousePosition = UnzoomCoordinates(e.GetPosition(this));
+                ActualizeResizingOnWorkspace(new ResizingEventArgs
                 {
                     ResizingType = ResizingType.ChangeSize,
                     //NewWidth = this.ActualWidth,
@@ -553,8 +589,8 @@ namespace ExpandScadaEditor.ScreenEditor.Items
             if (e.LeftButton == MouseButtonState.Pressed)
             {
                 e.Handled = true;
-                var mousePosition = e.GetPosition(this);
-                OnElementResizing(this, new ResizingEventArgs
+                var mousePosition = UnzoomCoordinates(e.GetPosition(this));
+                ActualizeResizingOnWorkspace(new ResizingEventArgs
                 {
                     ResizingType = ResizingType.ChangeSize,
                     NewWidth = mousePosition.X > 0 ? mousePosition.X : 1,
@@ -562,6 +598,30 @@ namespace ExpandScadaEditor.ScreenEditor.Items
                 });
             }
         }
+
+        // this is used to be a event, but not anymore...
+        void ActualizeResizingOnWorkspace(ResizingEventArgs e)
+        {
+            
+            switch (e.ResizingType)
+            {
+                case ResizingType.ChangeSize:
+                    if (!double.IsNaN(e.NewWidth) && e.NewWidth + this.CoordX < WorkspaceWidth)
+                    {
+                        Width = e.NewWidth;
+                    }
+                    if (!double.IsNaN(e.NewHeight) && e.NewHeight + this.CoordY < WorkspaceHeight)
+                    {
+                        Height = e.NewHeight;
+                    }
+                    Canvas.SetLeft(this, this.ZoomedCoordX);
+                    Canvas.SetTop(this, this.ZoomedCoordY);
+                    break;
+
+            }
+        }
+
+
 
         private void Resizing_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
         {
@@ -578,27 +638,33 @@ namespace ExpandScadaEditor.ScreenEditor.Items
             e.Handled = true;
         }
 
-        private void ChangeZoom(double scaleCoef)
+     //   private void ChangeZoom(double scaleCoef)
+     //   {
+
+     //       /*
+     //        * - Changing properties
+     //*              - Width/Height
+     //*              - X/Y coordinates
+     //*              - Text font
+     //*              - Line thickness? 
+     //*              - Resize borders (???)
+     //        * */
+
+     //       //ZoomCoef = scaleCoef;
+
+     //       base.Width = Width * scaleCoef;
+     //       base.Height = Height * scaleCoef;
+
+     //       ZoomedCoordX = CoordX * scaleCoef;
+     //       ZoomedCoordY = CoordY * scaleCoef;
+     //       Canvas.SetLeft(this, this.ZoomedCoordX);
+     //       Canvas.SetTop(this, this.ZoomedCoordY);
+
+     //   }
+
+        Point UnzoomCoordinates(Point zoomedCoordinates)
         {
-
-            /*
-             * - Changing properties
-     *              - Width/Height
-     *              - X/Y coordinates
-     *              - Text font
-     *              - Line thickness? 
-     *              - Resize borders (???)
-             * */
-
-            //ZoomCoef = scaleCoef;
-
-            base.Width = Width * scaleCoef;
-            base.Height = Height * scaleCoef;
-
-
-
-
-
+            return new Point(zoomedCoordinates.X / ZoomCoef, zoomedCoordinates.Y / ZoomCoef);
         }
 
         static bool PropertiesAreEqual(ScreenElement elementA, ScreenElement elementB)

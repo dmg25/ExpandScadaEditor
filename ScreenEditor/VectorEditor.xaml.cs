@@ -164,15 +164,15 @@ namespace ExpandScadaEditor.ScreenEditor
             };
             itemsTemplateSelector.previewTemplates = previewTemplates;
 
-            WorkSpace.Initialize(VM, WSScroller);
-            VM.Initialize();
+            
+            //VM.Initialize();
 
-            // Here we have to save original state of this workspace. Opened new or loaded - here must be first point
-            VM.UndoRedo.BasicUserAction(VM.ElementsOnWorkSpace.Values.ToList());
+            //// Here we have to save original state of this workspace. Opened new or loaded - here must be first point
+            //VM.UndoRedo.BasicUserAction(VM.ElementsOnWorkSpace.Values.ToList());
 
-            // events for creating element 
-            ElementCatalog.MouseLeftButtonUp += ElementCatalog_MouseLeftButtonUp;
-            ElementCatalog.MouseMove += ElementCatalog_MouseMove;
+            //// events for creating element 
+            //ElementCatalog.MouseLeftButtonUp += ElementCatalog_MouseLeftButtonUp;
+            //ElementCatalog.MouseMove += ElementCatalog_MouseMove;
         }
 
         private void ElementCatalog_MouseMove(object sender, MouseEventArgs e)
@@ -185,7 +185,9 @@ namespace ExpandScadaEditor.ScreenEditor
 
                 // !!! ATTENTION !!! we decide that here elementFromCatalog can be only one, so we will use only first element in follower tmp list
 
-                Point point = new Point(Mouse.GetPosition(WorkSpace).X, Mouse.GetPosition(WorkSpace).Y);
+                var point = WorkspaceCanvas.UnzoomCoordinates(Mouse.GetPosition(WorkSpace), WorkSpace.ZoomCoef) ;
+
+                //Point point = new Point(Mouse.GetPosition(WorkSpace).X, Mouse.GetPosition(WorkSpace).Y);
 
                 if (!elementFromCatalogMoved)
                 {
@@ -203,8 +205,8 @@ namespace ExpandScadaEditor.ScreenEditor
                 {
                     WorkSpace.TmpFollowerElements[0].CoordX = point.X;
                     WorkSpace.TmpFollowerElements[0].CoordY = point.Y;
-                    Canvas.SetLeft(WorkSpace.TmpFollowerElements[0], WorkSpace.TmpFollowerElements[0].CoordX);
-                    Canvas.SetTop(WorkSpace.TmpFollowerElements[0], WorkSpace.TmpFollowerElements[0].CoordY);
+                    Canvas.SetLeft(WorkSpace.TmpFollowerElements[0], WorkSpace.TmpFollowerElements[0].ZoomedCoordX);
+                    Canvas.SetTop(WorkSpace.TmpFollowerElements[0], WorkSpace.TmpFollowerElements[0].ZoomedCoordY);
                 }
             }
         }
@@ -216,8 +218,8 @@ namespace ExpandScadaEditor.ScreenEditor
                 if (elementFromCatalogMoved)
                 {
                     elementFromCatalogMoved = false;
-                    if (WorkSpace.TmpFollowerElements[0].CoordX > 0 && WorkSpace.TmpFollowerElements[0].CoordX < WorkSpace.ActualWidth
-                    && WorkSpace.TmpFollowerElements[0].CoordY > 0 && WorkSpace.TmpFollowerElements[0].CoordY < WorkSpace.ActualHeight)
+                    if (WorkSpace.TmpFollowerElements[0].CoordX > 0 && WorkSpace.TmpFollowerElements[0].CoordX < WorkSpace.Width
+                    && WorkSpace.TmpFollowerElements[0].CoordY > 0 && WorkSpace.TmpFollowerElements[0].CoordY < WorkSpace.Height)
                     {
                         elementFromCatalog.CoordX = WorkSpace.TmpFollowerElements[0].CoordX;
                         elementFromCatalog.CoordY = WorkSpace.TmpFollowerElements[0].CoordY;
@@ -286,11 +288,23 @@ namespace ExpandScadaEditor.ScreenEditor
             Focus();
 
             // TODO when you add properties for workspace size and it will be initialized in VM - move it there!
+            
+
+            WorkSpace.Initialize(VM, WSScroller);
+            VM.Initialize();
+
             WorkSpace.Width = 500;
             WorkSpace.Height = 500;
             WorkSpace.Background = Brushes.LightGray;
-            VM.WorkSpaceHeight = WorkSpace.ActualHeight;
-            VM.WorkSpaceWidth = WorkSpace.ActualWidth;
+            VM.WorkSpaceHeight = WorkSpace.Height;//WorkSpace.ActualHeight;
+            VM.WorkSpaceWidth = WorkSpace.Width;//WorkSpace.ActualWidth;
+
+            // Here we have to save original state of this workspace. Opened new or loaded - here must be first point
+            VM.UndoRedo.BasicUserAction(VM.ElementsOnWorkSpace.Values.ToList());
+
+            // events for creating element 
+            ElementCatalog.MouseLeftButtonUp += ElementCatalog_MouseLeftButtonUp;
+            ElementCatalog.MouseMove += ElementCatalog_MouseMove;
         }
 
 
@@ -385,7 +399,7 @@ namespace ExpandScadaEditor.ScreenEditor
                 }
 
                 // Update canvas position
-                VM.SelectedElements.ForEach(x => { Canvas.SetLeft(x, x.CoordX); Canvas.SetTop(x, x.CoordY); });
+                VM.SelectedElements.ForEach(x => { Canvas.SetLeft(x, x.ZoomedCoordX); Canvas.SetTop(x, x.ZoomedCoordY); });
                 VM.UndoRedo.NewUserAction(VM.ElementsOnWorkSpace);
             }
 
@@ -403,6 +417,26 @@ namespace ExpandScadaEditor.ScreenEditor
             if (Keyboard.IsKeyDown(Key.LeftShift) || Keyboard.IsKeyDown(Key.RightShift))
             {
                 scrollViewer.ScrollToHorizontalOffset(scrollViewer.HorizontalOffset - e.Delta);
+                e.Handled = true;
+            }
+            else if (Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl))
+            {
+                ICommand command = null;
+
+                if (e.Delta > 0)
+                {
+                    command = VM.ZoomIn;
+                }
+                else if (e.Delta < 0)
+                {
+                    command = VM.ZoomOut;
+                }
+
+                if (command != null && command.CanExecute(null))
+                {
+                    command.Execute(null);
+                }
+
                 e.Handled = true;
             }
         }

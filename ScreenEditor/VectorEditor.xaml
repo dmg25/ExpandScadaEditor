@@ -50,6 +50,7 @@
                 <Button Content="Cut" Command="{Binding Cut}" Focusable="False"/>
                 <Button Content="ZoomIn" Command="{Binding ZoomIn}" Focusable="False"/>
                 <Button Content="ZoomOut" Command="{Binding ZoomOut}" Focusable="False"/>
+                <Button Content="ResetZoom" Command="{Binding ResetZoom}" Focusable="False"/>
             </ToolBar>
             
             

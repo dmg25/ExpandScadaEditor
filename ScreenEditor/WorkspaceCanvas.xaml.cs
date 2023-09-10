@@ -48,9 +48,28 @@ namespace ExpandScadaEditor.ScreenEditor
 
         // Parental variables - must be initialized with editor
         internal VectorEditorVM VM;
-        internal ScrollViewer ParentalScroller; 
+        internal ScrollViewer ParentalScroller;
 
+        //Refactoring:
+        // Move as much as possible to screen element class
+        // check if working
+        // fix all zoom conflicts..
 
+        /*  Zooming rules
+         *      - if we move element
+         *          - add new parameters "zoomed coordinates"
+         *          - every time when we want to update coordinates by moving and use mouse coordinates - update new params and calc real coords unzoomed
+         *          - show mouse coordinates unzoomed too!
+         *      - if we resize element
+         *          - check every place where we can change size of element
+         *          - when we do it - update local size with dividing by zoom coef
+         *          - everywhere where we check actual size of element - check unzoomed settings
+         *      - if we create element
+         *      - if we copy/paste elements
+         *      - if we select elements by selecting border
+         * 
+         * 
+         * */
 
         private double zoomCoef = 1;
         public double ZoomCoef
@@ -71,6 +90,15 @@ namespace ExpandScadaEditor.ScreenEditor
                 //ChangeZoom(value);
                 //}
                 zoomCoef = value;
+
+                base.Width = Width * zoomCoef;
+                base.Height = Height * zoomCoef;
+
+                foreach (var pairs in VM.ElementsOnWorkSpace)
+                {
+                    pairs.Value.ZoomCoef = value;
+                }
+
                 //NotifyPropertyChanged();
             }
         }
@@ -86,6 +114,13 @@ namespace ExpandScadaEditor.ScreenEditor
             {
                 width = value;
                 base.Width = Width * ZoomCoef;
+                
+                foreach (var pairs in VM.ElementsOnWorkSpace)
+                {
+                    pairs.Value.WorkspaceWidth = value;
+                }
+
+
                 //NotifyPropertyChanged();
             }
         }
@@ -101,6 +136,10 @@ namespace ExpandScadaEditor.ScreenEditor
             {
                 height = value;
                 base.Height = Height * ZoomCoef;
+                foreach (var pairs in VM.ElementsOnWorkSpace)
+                {
+                    pairs.Value.WorkspaceHeight = value;
+                }
                 //NotifyPropertyChanged();
             }
         }
@@ -128,15 +167,21 @@ namespace ExpandScadaEditor.ScreenEditor
 
             MouseLeftButtonDown += WorkSpace_MouseLeftButtonDown;
             MouseLeftButtonUp += WorkSpace_MouseLeftButtonUp;
+
+            // TODO move it somwhere else...
+            foreach (var pairs in VM.ElementsOnWorkSpace)
+            {
+                pairs.Value.Width = Width;
+                pairs.Value.Height = Height;
+            }
         }
 
         private void VM_ZoomChanged(object sender, EventArgs e)
         {
-
+            ZoomCoef = VM.ZoomCoef;
         }
 
 
-        // TODO move to screenElement
         private void VM_SelectTheseElements(object sender, ScreenElementsEventArgs e)
         {
             DeselectAllElements();
@@ -156,7 +201,7 @@ namespace ExpandScadaEditor.ScreenEditor
             e.Element.MouseLeftButtonDown -= Element_MouseLeftButtonDown;
             e.Element.MouseLeftButtonUp -= Element_MouseLeftButtonUp;
 
-            e.Element.OnElementResizing -= Element_OnElementResizing;
+            //e.Element.OnElementResizing -= Element_OnElementResizing;
             e.Element.ElementSizeChanged -= Element_ElementResized;
 
             //WorkSpace.Children.Remove(WorkSpace.Children.fir);
@@ -172,7 +217,7 @@ namespace ExpandScadaEditor.ScreenEditor
             {
                 e.OldElement.MouseLeftButtonDown -= Element_MouseLeftButtonDown;
                 e.OldElement.MouseLeftButtonUp -= Element_MouseLeftButtonUp;
-                e.OldElement.OnElementResizing -= Element_OnElementResizing;
+                //e.OldElement.OnElementResizing -= Element_OnElementResizing;
                 e.OldElement.ElementSizeChanged -= Element_ElementResized;
                 this.Children.Remove(e.OldElement);
                 e.OldElement = null;
@@ -183,11 +228,11 @@ namespace ExpandScadaEditor.ScreenEditor
         private void VM_NewScreenElementAdded(object sender, ScreenElementEventArgs e)
         {
             this.Children.Add(e.Element);
-            Canvas.SetLeft(e.Element, e.Element.CoordX);
-            Canvas.SetTop(e.Element, e.Element.CoordY);
+            Canvas.SetLeft(e.Element, e.Element.ZoomedCoordX);
+            Canvas.SetTop(e.Element, e.Element.ZoomedCoordY);
             e.Element.MouseLeftButtonDown += Element_MouseLeftButtonDown;
             e.Element.MouseLeftButtonUp += Element_MouseLeftButtonUp;
-            e.Element.OnElementResizing += Element_OnElementResizing;
+            //e.Element.OnElementResizing += Element_OnElementResizing;
             e.Element.ElementSizeChanged += Element_ElementResized;
         }
 
@@ -198,58 +243,6 @@ namespace ExpandScadaEditor.ScreenEditor
         {
             VM.UndoRedo.NewUserAction(VM.ElementsOnWorkSpace);
             // VM.UndoRedo.NewUserAction(sender as ScreenElement);
-        }
-
-
-
-        private void Element_OnElementResizing(object sender, ResizingEventArgs e)
-        {
-            /*  Zoom and resizing 
-             *      - send every time actual width/height to elements on canvas (just in properties)
-             *          - send them on creation too (maybe create special methid aka "actualize to current world")
-             *          - create also new ersatz properties and use them
-             *          - do the same for zoom coef
-             *          - BUT NOT HERE - in VM
-             *      - ??? what do we do if we changed size of workspace, but there are some elements close to border?
-             *          - probably nothing - let them be out of range, just be sure - no crush
-             *          - and we have to be able to see tree of elements - find them and change position
-             *      - Move as must as possible action to element itself. e.g. 100% resiting functions
-             *          - moving make here as short as possible
-             *          
-             *      
-             * 
-             * 
-             * 
-             * 
-             * 
-             * 
-             * */
-
-
-
-
-
-
-
-            var element = sender as ScreenElement;
-            switch (e.ResizingType)
-            {
-                case ResizingType.ChangeSize:
-                    if (!double.IsNaN(e.NewWidth) && e.NewWidth + element.CoordX < this.ActualWidth)
-                    {
-                        element.Width = e.NewWidth;
-                    }
-                    if (!double.IsNaN(e.NewHeight) && e.NewHeight + element.CoordY < this.ActualHeight)
-                    {
-                        element.Height = e.NewHeight;
-                    }
-                    Canvas.SetLeft(element, element.CoordX);
-                    Canvas.SetTop(element, element.CoordY);
-                    break;
-
-            }
-
-
         }
 
 
@@ -273,7 +266,7 @@ namespace ExpandScadaEditor.ScreenEditor
             }
 
             // start of selecting by mouse
-            var mousePosition = e.GetPosition(this);
+            var mousePosition = WorkspaceCanvas.UnzoomCoordinates(e.GetPosition(this), ZoomCoef);
 
             // drop all selected elements if there were before
             DeselectAllElements();
@@ -304,7 +297,7 @@ namespace ExpandScadaEditor.ScreenEditor
             }
 
             //SelectedElement = sender as ScreenElement;
-            var mousePosition = e.GetPosition(element);
+            var mousePosition = WorkspaceCanvas.UnzoomCoordinates(e.GetPosition(element), ZoomCoef);
             SelectedElementMousePressedCoordX = mousePosition.X;
             SelectedElementMousePressedCoordY = mousePosition.Y;
             selectedElementIndexByMouse = VM.SelectedElements.IndexOf(element);
@@ -375,77 +368,6 @@ namespace ExpandScadaEditor.ScreenEditor
             selectedPositionsBeforeMoving.Clear();
         }
 
-        //private void ElementCatalog_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
-        //{
-        //    if (elementFromCatalog is not null)
-        //    {
-        //        if (elementFromCatalogMoved)
-        //        {
-        //            elementFromCatalogMoved = false;
-        //            if (TmpFollowerElements[0].CoordX > 0 && TmpFollowerElements[0].CoordX < WorkSpace.ActualWidth
-        //            && TmpFollowerElements[0].CoordY > 0 && TmpFollowerElements[0].CoordY < WorkSpace.ActualHeight)
-        //            {
-        //                elementFromCatalog.CoordX = TmpFollowerElements[0].CoordX;
-        //                elementFromCatalog.CoordY = TmpFollowerElements[0].CoordY;
-        //                RemoveTmpElementsWithOpacity();
-        //            }
-        //            else
-        //            {
-        //                RemoveTmpElementsWithOpacity();
-        //                elementFromCatalog = null;
-        //                Cursor = Cursors.Arrow;
-        //                return;
-        //            }
-        //        }
-        //        else
-        //        {
-        //            var position = FindPlaceForNewElement(elementFromCatalog);
-        //            elementFromCatalog.CoordX = position.x;
-        //            elementFromCatalog.CoordY = position.y;
-        //        }
-
-        //        VM.AddNewScreenElement(elementFromCatalog);
-        //        VM.UndoRedo.NewUserAction(VM.ElementsOnWorkSpace, UndoRedoActionType.Create);
-        //    }
-
-        //    Cursor = Cursors.Arrow;
-        //}
-
-
-
-        //private void ElementCatalog_MouseMove(object sender, MouseEventArgs e)
-        //{
-        //    if (e.LeftButton == MouseButtonState.Pressed && elementFromCatalog is not null)
-        //    {
-        //        //TranslateTransform transform = new TranslateTransform();
-        //        //transform.X = Mouse.GetPosition(WorkSpace).X;
-        //        //transform.Y = Mouse.GetPosition(WorkSpace).Y;
-
-        //        // !!! ATTENTION !!! we decide that here elementFromCatalog can be only one, so we will use only first element in follower tmp list
-
-        //        Point point = new Point(Mouse.GetPosition(WorkSpace).X, Mouse.GetPosition(WorkSpace).Y);
-
-        //        if (!elementFromCatalogMoved)
-        //        {
-        //            elementFromCatalogMoved = true;
-        //            // create new element on the CANVAS layer and set opacity 0,5 and -1 ID
-        //            // we can set coordinates to catalog's element, because we've copied it
-        //            elementFromCatalog.CoordX = point.X;
-        //            elementFromCatalog.CoordY = point.Y;
-        //            CreateTmpElementsWithOpacity(new List<ScreenElement>() { elementFromCatalog });
-
-        //            ElementCatalog.Cursor = Cursors.SizeAll;
-        //            Cursor = Cursors.SizeAll;
-        //        }
-        //        else
-        //        {
-        //            TmpFollowerElements[0].CoordX = point.X;
-        //            TmpFollowerElements[0].CoordY = point.Y;
-        //            Canvas.SetLeft(TmpFollowerElements[0], TmpFollowerElements[0].CoordX);
-        //            Canvas.SetTop(TmpFollowerElements[0], TmpFollowerElements[0].CoordY);
-        //        }
-        //    }
-        //}
 
         private void WorkSpace_MouseMove(object sender, MouseEventArgs e)
         {
@@ -455,7 +377,7 @@ namespace ExpandScadaEditor.ScreenEditor
             //}
 
             //--- test / delete later ---
-            var mousePosition = e.GetPosition(this);
+            var mousePosition = WorkspaceCanvas.UnzoomCoordinates(e.GetPosition(this), ZoomCoef);
             VM.MouseX = mousePosition.X;
             VM.MouseY = mousePosition.Y;
             //---------------------------
@@ -532,8 +454,8 @@ namespace ExpandScadaEditor.ScreenEditor
                             }
                             element.CoordX = coords.xCoord;
                             element.CoordY = coords.yCoord;
-                            Canvas.SetLeft(element, element.CoordX);
-                            Canvas.SetTop(element, element.CoordY);
+                            Canvas.SetLeft(element, element.ZoomedCoordX);
+                            Canvas.SetTop(element, element.ZoomedCoordY);
                         }
                     }
 
@@ -579,7 +501,7 @@ namespace ExpandScadaEditor.ScreenEditor
                         // coordinate of 2 point must be less then coord of second point of selection rect
 
                         Point elementRect1 = new Point(element.Value.CoordX, element.Value.CoordY);
-                        Point elementRect2 = new Point(element.Value.CoordX + element.Value.ActualWidth, element.Value.CoordY + element.Value.ActualHeight);
+                        Point elementRect2 = new Point(element.Value.CoordX + element.Value.Width, element.Value.CoordY + element.Value.Height);
 
                         if (selectRect1.X <= elementRect1.X && selectRect1.Y <= elementRect1.Y
                             && selectRect2.X >= elementRect2.X && selectRect2.Y >= elementRect2.Y)
@@ -608,7 +530,7 @@ namespace ExpandScadaEditor.ScreenEditor
                         // if any coordinate of any of 2 points intersected with coordinates of selecting rect - object selected
 
                         Point elementRect1 = new Point(element.Value.CoordX, element.Value.CoordY);
-                        Point elementRect2 = new Point(element.Value.CoordX + element.Value.ActualWidth, element.Value.CoordY + element.Value.ActualHeight);
+                        Point elementRect2 = new Point(element.Value.CoordX + element.Value.Width, element.Value.CoordY + element.Value.Height);
 
                         if (selectRect2.X >= elementRect1.X && selectRect2.Y >= elementRect1.Y &&
                             selectRect1.X <= elementRect2.X && selectRect1.Y <= elementRect2.Y)
@@ -671,8 +593,8 @@ namespace ExpandScadaEditor.ScreenEditor
 
         internal (double x, double y) FindPlaceForNewElement(ScreenElement element)
         {
-            double centerX = this.ActualWidth / 2;
-            double centerY = this.ActualHeight / 2;
+            double centerX = this.Width / 2;
+            double centerY = this.Height / 2;
 
             bool endX = false;
             bool endY = false;
@@ -690,15 +612,15 @@ namespace ExpandScadaEditor.ScreenEditor
                     double newCenterX = centerX + 10;
                     double newCenterY = centerY + 10;
 
-                    if (newCenterX + element.Width >= this.ActualWidth)
+                    if (newCenterX + element.Width >= this.Width)
                     {
-                        newCenterX = this.ActualWidth - element.Width;
+                        newCenterX = this.Width - element.Width;
                         endX = true;
                     }
 
-                    if (newCenterY + element.Height >= this.ActualHeight)
+                    if (newCenterY + element.Height >= this.Height)
                     {
-                        newCenterY = this.ActualHeight - element.Height;
+                        newCenterY = this.Height - element.Height;
                         endY = true;
                     }
 
@@ -736,8 +658,8 @@ namespace ExpandScadaEditor.ScreenEditor
             // we can move one element a little off the board, but if there is a group - nonono
             if (movingElements.Count == 1)
             {
-                if (currentPosition.X >= this.ActualWidth || currentPosition.X <= 0
-                   || currentPosition.Y >= this.ActualHeight || currentPosition.Y <= 0)
+                if (currentPosition.X >= this.Width || currentPosition.X <= 0
+                   || currentPosition.Y >= this.Height || currentPosition.Y <= 0)
                 {
                     return;
                 }
@@ -746,8 +668,8 @@ namespace ExpandScadaEditor.ScreenEditor
             {
                 foreach (var element in movingElements)
                 {
-                    if (element.CoordX + offsetX + element.ActualWidth >= this.ActualWidth
-                        || element.CoordY + offsetY + element.ActualHeight >= this.ActualHeight
+                    if (element.CoordX + offsetX + element.Width >= this.Width
+                        || element.CoordY + offsetY + element.Height >= this.Height
                         || element.CoordX + offsetX <= 0 || element.CoordY + offsetY <= 0)
                     {
                         return;
@@ -760,8 +682,8 @@ namespace ExpandScadaEditor.ScreenEditor
             {
                 element.CoordX += offsetX;
                 element.CoordY += offsetY;
-                Canvas.SetLeft(element, element.CoordX);
-                Canvas.SetTop(element, element.CoordY);
+                Canvas.SetLeft(element, element.ZoomedCoordX);
+                Canvas.SetTop(element, element.ZoomedCoordY);
             }
         }
 
@@ -777,14 +699,15 @@ namespace ExpandScadaEditor.ScreenEditor
                 tmpElement.Opacity = 0.5;
                 tmpElement.CoordX = copyFromElements[i].CoordX;
                 tmpElement.CoordY = copyFromElements[i].CoordY;
+                tmpElement.ZoomCoef = ZoomCoef;
 
                 tmpElement.MouseLeftButtonUp += Element_MouseLeftButtonUp;
 
                 TmpFollowerElements.Add(tmpElement);
 
                 this.Children.Add(tmpElement);
-                Canvas.SetLeft(tmpElement, tmpElement.CoordX);
-                Canvas.SetTop(tmpElement, tmpElement.CoordY);
+                Canvas.SetLeft(tmpElement, tmpElement.ZoomedCoordX);
+                Canvas.SetTop(tmpElement, tmpElement.ZoomedCoordY);
             }
         }
 
@@ -805,13 +728,13 @@ namespace ExpandScadaEditor.ScreenEditor
                 switch (direction)
                 {
                     case Key.Right:
-                        if (element.CoordX + element.ActualWidth >= this.ActualWidth)
+                        if (element.CoordX + element.Width >= this.Width)
                         {
                             canMove = false;
                         }
                         break;
                     case Key.Down:
-                        if (element.CoordY + element.ActualHeight >= this.ActualHeight)
+                        if (element.CoordY + element.Height >= this.Height)
                         {
                             canMove = false;
                         }
@@ -853,16 +776,36 @@ namespace ExpandScadaEditor.ScreenEditor
              * 
              * */
 
+            var unzoomedViewportWidth = ParentalScroller.ViewportWidth / ZoomCoef;
+            var unzoomedViewportHeight = ParentalScroller.ViewportHeight / ZoomCoef;
+            var unzoomedHorizontalOffset = ParentalScroller.HorizontalOffset / ZoomCoef;
+            var unzoomedVerticalOffset = ParentalScroller.VerticalOffset / ZoomCoef;
+
             // TODO complete it with backmoving
-            if (currentMousePosition.X >= ParentalScroller.ViewportWidth - ParentalScroller.HorizontalOffset - 10)
+            //if (currentMousePosition.X >= ParentalScroller.ViewportWidth - ParentalScroller.HorizontalOffset - 10)
+            //{
+            //    ParentalScroller.ScrollToHorizontalOffset(ParentalScroller.HorizontalOffset + 0.5);
+            //}
+
+            //if (currentMousePosition.Y >= ParentalScroller.ViewportHeight - ParentalScroller.VerticalOffset - 10)
+            //{
+            //    ParentalScroller.ScrollToVerticalOffset(ParentalScroller.VerticalOffset + 0.5);
+            //}
+
+
+
+            if (currentMousePosition.X >= unzoomedViewportWidth + unzoomedHorizontalOffset - 10)
             {
                 ParentalScroller.ScrollToHorizontalOffset(ParentalScroller.HorizontalOffset + 0.5);
             }
 
-            if (currentMousePosition.Y >= ParentalScroller.ViewportHeight - ParentalScroller.VerticalOffset - 10)
+            if (currentMousePosition.Y >= unzoomedViewportHeight + unzoomedVerticalOffset - 10)
             {
                 ParentalScroller.ScrollToVerticalOffset(ParentalScroller.VerticalOffset + 0.5);
             }
+
+
+
 
             // just tests
             //var fff = this.ParentalScroller;
@@ -893,7 +836,15 @@ namespace ExpandScadaEditor.ScreenEditor
 
 
 
+        public static Point UnzoomCoordinates(Point zoomedCoordinates, double zoomCoef)
+        {
+            return new Point(zoomedCoordinates.X / zoomCoef, zoomedCoordinates.Y / zoomCoef);
+        }
 
+        public static Point ZoomCoordinates(Point zoomedCoordinates, double zoomCoef)
+        {
+            return new Point(zoomedCoordinates.X * zoomCoef, zoomedCoordinates.Y * zoomCoef);
+        }
 
 
 
