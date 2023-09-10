@@ -88,7 +88,7 @@ namespace ExpandScadaEditor.ScreenEditor
      *              - !!! BUT !!! on mouse Up event we will see source as canvas EVERY TIME. So this is a problem we have to solve carefully
      *      
      *      
-     *   ###CREATE ZOOM FUNCTIONS: TOOLS/MOUSE WHEEL + CTRL...
+     *   +++CREATE ZOOM FUNCTIONS: TOOLS/MOUSE WHEEL + CTRL...
      *          - Create  + and - commands for zooming
      *          - each step of this command must change zoom lets say on 10%
      *          - For rendering use original element's settings, but user has to see properties for him only (without scaling)
@@ -101,7 +101,17 @@ namespace ExpandScadaEditor.ScreenEditor
      *              - Resize borders (???)
      *          - Add scrollbar to the bottom for resizing
      *      
-     *      
+     *    ###Show settings
+     *          - of selected elements and workspace if nothing selected
+     *          - do it as a list on a right side
+     *          - with validation
+     *          - with default values
+     *          - with different types:
+     *              - textbox
+     *              - combobox
+     *              - color selection
+     *              - ...
+     *          - 
      *      
      *      
      *      
@@ -122,7 +132,31 @@ namespace ExpandScadaEditor.ScreenEditor
      *  1. When a group of elements selected show special icon "+" with arrows, to move whole group. 
      *     There could be situation, that selected elements are too small to move them by pressing on them
      * 
-     * 
+     *  2. Add rotation if one element is selected - show icon for rotating and catch mause over it
+     *  
+     *  3. Show scrollbar with zoom below
+     *  
+     *  4. Show coordinates on bottom and delete test coordinates
+     *  
+     *  5. Check copying and adding of new element with dragging. There is a lot of crashes and moving is not finished sometimes. 
+     *     Sometimes undo/redo throw an exception after moving/copying finished
+     *     
+     *  6. Add rotation of element as commands +/- 90 deg
+     *  
+     *  7. Do not show red border over selected elements, only if it is not selected
+     *  
+     *  8. Do not show gray border above resizing rectangles
+     *  
+     *  9. Add scroll on element moving - it is not really simple
+     *  
+     *  10. If at least one element selected and user press arrows on keyboard - do not move workspace with element. Only element
+     *  
+     *  11. Complete zooming functions:
+     *      - border thickness
+     *      - fext font
+     *      - calculate min/max limits for this. If we can not show text bigger than that or smaller - do not allow do it
+     *      
+     *  12. 
      * 
      * 
      * */
