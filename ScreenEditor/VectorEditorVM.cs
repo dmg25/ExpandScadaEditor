@@ -40,9 +40,23 @@ namespace ExpandScadaEditor.ScreenEditor
         public event EventHandler<ScreenElementsEventArgs> SelectTheseElements;
         public event EventHandler ZoomChanged;
 
-        internal List<ScreenElement> SelectedElements = new List<ScreenElement>();
+         
+        private ObservableCollection<ScreenElement> selectedElements = new ObservableCollection<ScreenElement>();
+        public ObservableCollection<ScreenElement> SelectedElements
+        {
+            get
+            {
+                return selectedElements;
+            }
+            set
+            {
+                selectedElements = value;
+                NotifyPropertyChanged();
+            }
+        }
+
         //internal Dictionary<int, ScreenElement> SelectedElements = new Dictionary<int, ScreenElement>();
-        internal List<ScreenElement> CopyPasteBuffer = new List<ScreenElement>();
+        internal ObservableCollection<ScreenElement> CopyPasteBuffer = new ObservableCollection<ScreenElement>();
 
         private List<ScreenElement> items = new List<ScreenElement>();
         public List<ScreenElement> Items
@@ -252,7 +266,11 @@ namespace ExpandScadaEditor.ScreenEditor
                 return _delete ??
                     (_delete = new Command(obj =>
                     {
-                        SelectedElements.ForEach(x => ElementsOnWorkSpace.Remove(x.Id));
+                        //SelectedElements.ForEach(x => ElementsOnWorkSpace.Remove(x.Id));
+                        foreach (var item in SelectedElements)
+                        {
+                            ElementsOnWorkSpace.Remove(item.Id);
+                        }
                         UndoRedo.NewUserAction(ElementsOnWorkSpace, UndoRedoActionType.Delete); 
                         SelectedElementsDeleted(null, new EventArgs());
                     },
@@ -275,7 +293,11 @@ namespace ExpandScadaEditor.ScreenEditor
                         // copy all elements with all properties from selected list to buffer
 
                         CopyPasteBuffer.Clear();
-                        CopyElementsInList(SelectedElements).ForEach(x => CopyPasteBuffer.Add(x));
+                        //CopyElementsInList(SelectedElements).ForEach(x => CopyPasteBuffer.Add(x));
+                        foreach (var item in CopyElementsInList(SelectedElements))
+                        {
+                            CopyPasteBuffer.Add(item);
+                        }
                     },
                     obj =>
                     {
@@ -301,15 +323,27 @@ namespace ExpandScadaEditor.ScreenEditor
                         var ShiftingPossibility = CheckIfElementsCanBeShifted(CopyPasteBuffer);
                         if (ShiftingPossibility.XEnabled)
                         {
-                            CopyPasteBuffer.ForEach(x => x.CoordX += 5);
+                            //CopyPasteBuffer.ForEach(x => x.CoordX += 5);
+                            foreach (var item in CopyPasteBuffer)
+                            {
+                                item.CoordX += 5;
+                            }
                         }
                         if (ShiftingPossibility.YEnabled)
                         {
-                            CopyPasteBuffer.ForEach(x => x.CoordY += 5);
+                            //CopyPasteBuffer.ForEach(x => x.CoordY += 5);
+                            foreach (var item in CopyPasteBuffer)
+                            {
+                                item.CoordY += 5;
+                            }
                         }
 
                         List<ScreenElement> elementsForSelection = new List<ScreenElement>();
-                        CopyElementsInList(CopyPasteBuffer).ForEach(x => { AddNewScreenElement(x); elementsForSelection.Add(x); });
+                        //CopyElementsInList(CopyPasteBuffer).ForEach(x => { AddNewScreenElement(x); elementsForSelection.Add(x); });
+                        foreach (var item in CopyPasteBuffer)
+                        {
+                            AddNewScreenElement(item); elementsForSelection.Add(item);
+                        }
                         SelectTheseElements(null, new ScreenElementsEventArgs() { Elements = elementsForSelection });
                         UndoRedo.NewUserAction(ElementsOnWorkSpace, UndoRedoActionType.Create);
                     },
@@ -492,7 +526,7 @@ namespace ExpandScadaEditor.ScreenEditor
             }
         }
 
-        (bool XEnabled, bool YEnabled) CheckIfElementsCanBeShifted(List<ScreenElement> elements)
+        (bool XEnabled, bool YEnabled) CheckIfElementsCanBeShifted(ObservableCollection<ScreenElement> elements)
         {
             bool XEnabled = true;
             bool YEnabled = true;
@@ -512,9 +546,9 @@ namespace ExpandScadaEditor.ScreenEditor
             return (XEnabled, YEnabled);
         }
 
-        public List<ScreenElement> CopyElementsInList(List<ScreenElement> elements)
+        public ObservableCollection<ScreenElement> CopyElementsInList(ObservableCollection<ScreenElement> elements)
         {
-            List<ScreenElement> result = new List<ScreenElement>();
+            ObservableCollection<ScreenElement> result = new ObservableCollection<ScreenElement>();
             foreach (var element in elements)
             {
                 var type = element.GetType();

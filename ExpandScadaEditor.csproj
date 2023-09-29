@@ -15,4 +15,8 @@
     <Folder Include="ScreenEditor\Behaviors\" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\ExpandScada\Common\Common.csproj" />
+  </ItemGroup>
+
 </Project>

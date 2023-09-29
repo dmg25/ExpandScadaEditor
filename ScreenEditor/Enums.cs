@@ -6,6 +6,13 @@ using System.Threading.Tasks;
 
 namespace ExpandScadaEditor.ScreenEditor
 {
+    public enum ConnectedSignalMode
+    {
+        ReadOnly,
+        ReadWrite
+    }
+
+
     public enum UndoRedoActionType
     {
         Base,

@@ -230,7 +230,7 @@ namespace ExpandScadaEditor.ScreenEditor
                     // we can set coordinates to catalog's element, because we've copied it
                     elementFromCatalog.CoordX = point.X;
                     elementFromCatalog.CoordY = point.Y;
-                    WorkSpace.CreateTmpElementsWithOpacity(new List<ScreenElement>() { elementFromCatalog });
+                    WorkSpace.CreateTmpElementsWithOpacity(new ObservableCollection<ScreenElement>() { elementFromCatalog });
 
                     ElementCatalog.Cursor = Cursors.SizeAll;
                     Cursor = Cursors.SizeAll;
@@ -359,20 +359,36 @@ namespace ExpandScadaEditor.ScreenEditor
                         case Key.Right:
                             if (WorkSpace.CanMoveElements(VM.SelectedElements, e.Key))
                             {
-                                VM.SelectedElements.ForEach(x => x.Width++);
+                                //VM.SelectedElements.ForEach(x => x.Width++);
+                                foreach (var item in VM.SelectedElements)
+                                {
+                                    item.Width++;
+                                }
                             }
                             break;
                         case Key.Down:
                             if (WorkSpace.CanMoveElements(VM.SelectedElements, e.Key))
                             {
-                                VM.SelectedElements.ForEach(x => x.Height++);
+                                //VM.SelectedElements.ForEach(x => x.Height++);
+                                foreach (var item in VM.SelectedElements)
+                                {
+                                    item.Height++;
+                                }
                             }
                             break;
                         case Key.Left:
-                            VM.SelectedElements.ForEach(x => { if (x.Width > 1) x.Width--; });
+                            //VM.SelectedElements.ForEach(x => { if (x.Width > 1) x.Width--; });
+                            foreach (var item in VM.SelectedElements)
+                            {
+                                if (item.Width > 1) item.Width--;
+                            }
                             break;
                         case Key.Up:
-                            VM.SelectedElements.ForEach(x => { if (x.Height > 1) x.Height--; });
+                            //VM.SelectedElements.ForEach(x => { if (x.Height > 1) x.Height--; });
+                            foreach (var item in VM.SelectedElements)
+                            {
+                                if (item.Height > 1) item.Height--;
+                            }
                             break;
                     }
                     VM.UndoRedo.NewUserAction(VM.ElementsOnWorkSpace);
@@ -419,21 +435,41 @@ namespace ExpandScadaEditor.ScreenEditor
                 switch (e.Key)
                 {
                     case Key.Right:
-                        VM.SelectedElements.ForEach(x => x.CoordX++);
+                        //VM.SelectedElements.ForEach(x => x.CoordX++);
+                        foreach (var item in VM.SelectedElements)
+                        {
+                            item.CoordX++;
+                        }
                         break;
                     case Key.Down:
-                        VM.SelectedElements.ForEach(x => x.CoordY++);
+                        //VM.SelectedElements.ForEach(x => x.CoordY++);
+                        foreach (var item in VM.SelectedElements)
+                        {
+                            item.CoordY++;
+                        }
                         break;
                     case Key.Left:
-                        VM.SelectedElements.ForEach(x => x.CoordX--);
+                        //VM.SelectedElements.ForEach(x => x.CoordX--);
+                        foreach (var item in VM.SelectedElements)
+                        {
+                            item.CoordX--;
+                        }
                         break;
                     case Key.Up:
-                        VM.SelectedElements.ForEach(x => x.CoordY--);
+                        //VM.SelectedElements.ForEach(x => x.CoordY--);
+                        foreach (var item in VM.SelectedElements)
+                        {
+                            item.CoordY--;
+                        }
                         break;
                 }
 
                 // Update canvas position
-                VM.SelectedElements.ForEach(x => { Canvas.SetLeft(x, x.ZoomedCoordX); Canvas.SetTop(x, x.ZoomedCoordY); });
+                //VM.SelectedElements.ForEach(x => { Canvas.SetLeft(x, x.ZoomedCoordX); Canvas.SetTop(x, x.ZoomedCoordY); });
+                foreach (var item in VM.SelectedElements)
+                {
+                    Canvas.SetLeft(item, item.ZoomedCoordX); Canvas.SetTop(item, item.ZoomedCoordY);
+                }
                 VM.UndoRedo.NewUserAction(VM.ElementsOnWorkSpace);
             }
 
