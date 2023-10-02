@@ -201,6 +201,19 @@ namespace ExpandScadaEditor.ScreenEditor.Items.Properties
             Editable = editable;
         }
 
+        public ElementProperty(string name,
+            string description,
+            T initialValue, 
+            Func<T, string> validation = null,
+            bool canConnectSignal = false,
+            bool editable = true)
+            : this (name, description, validation, canConnectSignal, editable)
+        {
+            _value = initialValue;
+            OnPropertyChanged(nameof(Value));
+        }
+
+
         // For reflection
         public ElementProperty()
         {

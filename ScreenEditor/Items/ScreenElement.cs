@@ -756,22 +756,22 @@ namespace ExpandScadaEditor.ScreenEditor.Items
 
 
         public ElementProperty<T> CreateEditableDependencyProperty<T>(
-            string propertyName,
+            string dependencyPropertyName,
             string description,
-            
-
-
             Func<T, string> validation = null,
             bool canConnectSignal = false,
             bool editable = true,
             string customName = null
             )
         {
-            var propertyInfo = this.GetType().GetProperty(propertyName);
+
+            PropertyChangeNotifier notifier = new PropertyChangeNotifier(this, dependencyPropertyName);
+
 
             ElementProperty<T> newProperty = new ElementProperty<T>(
-                customName is null ? propertyName : customName,
+                customName is null ? dependencyPropertyName : customName,
                 description,
+                (T)notifier.Value,
                 validation,
                 canConnectSignal,
                 editable);
@@ -782,16 +782,23 @@ namespace ExpandScadaEditor.ScreenEditor.Items
             {
                 if (e.PropertyName == "Value")
                 {
-                    this.GetType().GetProperty(propertyName).SetValue(this, ((ElementProperty<T>)sender).Value);
+                    notifier.Value = ((ElementProperty<T>)sender).Value;
+                    //this.GetType().GetProperty(propertyName).SetValue(this, ((ElementProperty<T>)sender).Value);
                 }
             };
 
-            this.PropertyChanged += (sender, e) =>
+
+
+            notifier.ValueChanged += (sender, e) =>
             {
-                if (e.PropertyName == propertyName)
-                {
-                    newProperty.Value = (T)sender.GetType().GetProperty(propertyName).GetValue(sender, null);
-                }
+                var notifierFromMessage = sender as PropertyChangeNotifier;
+
+                newProperty.Value = (T)notifierFromMessage.Value;
+
+                //if (e.PropertyName == propertyName)
+                //{
+                //    newProperty.Value = (T)sender.GetType().GetProperty(propertyName).GetValue(sender, null);
+                //}
             };
 
             // set on element 
@@ -804,16 +811,11 @@ namespace ExpandScadaEditor.ScreenEditor.Items
 
         private void CreateEditableProperties()
         {
-            //////////////////////////////create method to initialize editable property based on dependancy property
-            ////////////////////////////// make some research: can we get onchangevalue event? if yes - should be easy
-
-
             GroupOfProperties newGroup = new GroupOfProperties("Common", new ObservableCollection<ElementProperty>()
             {
                 CreateEditableProperty<int>(nameof(Id), "Id of element", editable: false, customName: "ID"),
                 CreateEditableProperty<string>(nameof(Name), "Name of the element"),
-                //CreateEditableProperty<bool>(nameof(IsVisible), "Visible"),
-
+                CreateEditableDependencyProperty<double>(nameof(Opacity), "Opacity"),
             });
 
             ElementPropertyGroups.Add(newGroup);
