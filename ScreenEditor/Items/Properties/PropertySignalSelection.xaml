@@ -1,0 +1,27 @@
+﻿<Window x:Class="ExpandScadaEditor.ScreenEditor.Items.Properties.PropertySignalSelection"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:ExpandScadaEditor.ScreenEditor.Items.Properties"
+        mc:Ignorable="d"
+        Title="PropertySignalSelection" Height="450" Width="800">
+    <Window.Resources>
+        <local:PropertySignalSelectionVM x:Key="ViewModel" />
+    </Window.Resources>
+    <Grid DataContext="{StaticResource ViewModel}">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition/>
+            <ColumnDefinition/>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition/>
+            <RowDefinition/>
+            <RowDefinition/>
+        </Grid.RowDefinitions>
+
+        <TextBlock Text="{Binding Property.Name}"/>
+
+        <Button Grid.Column="1" Command="{Binding CreateSignal}" Content="Create dummy signal" />
+    </Grid>
+</Window>

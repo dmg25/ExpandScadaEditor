@@ -35,20 +35,32 @@ namespace ExpandScadaEditor.ScreenEditor.Items.Properties
      *          - after user pressed esc or just left the field - drop thic color and revert pre-value
      * */
 
+
+    /*  How to connect signal:
+     *      - if we able connect signal to parameter - show small button like "..." after value
+     *      - if we pressed value - open special screen where user can select signal and stuff
+     *      - sent to this screec allowable type of signal (datatype and read/write type)
+     *      - window should filter all wrong signals
+     *      - but for now just make empty window
+     *      - if signal bound - make background of value (or whole line) another light color. 
+     *      - user can write any value in field - in will be default value before first reading of signal
+     * */
+
     public abstract class ElementProperty : INotifyPropertyChanged
     {
         public string Name { get; set; }
         public string Description { get; set; }
 
         public bool CanConnectSignal { get; set; }
+        public virtual bool IsSignalAttached { get; set; }
         public bool Editable { get; set; }
         public ConnectedSignalMode SignalMode { get; set; } = ConnectedSignalMode.ReadOnly;
 
-        public virtual object Value
-        {
-            get;
-            set;
-        }
+        //public virtual object Value
+        //{
+        //    get;
+        //    set;
+        //}
 
         public virtual Type PropertyType
         {
@@ -60,6 +72,12 @@ namespace ExpandScadaEditor.ScreenEditor.Items.Properties
             get;
             set;
         }
+
+        public virtual Command AttachSignal
+        {
+            get;
+        }
+
 
 
         public event PropertyChangedEventHandler PropertyChanged;
@@ -82,16 +100,32 @@ namespace ExpandScadaEditor.ScreenEditor.Items.Properties
 
     public class ElementProperty<T> : ElementProperty, IDataErrorInfo
     {
-        /*      Binding
-         *  - we have to add subscribe on 
-         * 
-         * 
-         * */
+
+        //private T _value;
+        //public override object Value
+        //{
+        //    get
+        //    {
+        //        return this._value;
+        //    }
+        //    set
+        //    {
+        //        this._value = (T)value;
+
+        //        if (!EqualityComparer<T>.Default.Equals(_value, (T)value))
+        //        {
+        //            OnPropertyChangedNotEqual();
+        //        }
 
 
+        //        this.OnPropertyChanged();
+        //    }
+        //}
+
+        private T tmpValueForValidationMessage;
 
         private T _value;
-        public override object Value
+        public T Value
         {
             get
             {
@@ -99,21 +133,58 @@ namespace ExpandScadaEditor.ScreenEditor.Items.Properties
             }
             set
             {
-                this._value = (T)value;
+                tmpValueForValidationMessage = value;
+                // Additional check - validation not only in view, but here too. Otherwise value will be written anyway
+                if (validation is not null && validation((T)value) != string.Empty)
+                {
+                    return;
+                }
 
                 if (!EqualityComparer<T>.Default.Equals(_value, (T)value))
                 {
+                    this._value = (T)value;
                     OnPropertyChangedNotEqual();
                 }
+                else
+                {
+                    this._value = (T)value;
+                }
 
-                
                 this.OnPropertyChanged();
             }
         }
 
-        
+        private bool isSignalAttached;
+        public override bool IsSignalAttached
+        {
+            get
+            {
+                return isSignalAttached;
+            }
+            set
+            {
+                isSignalAttached = value;
+                OnPropertyChanged();
+            }
+        }
 
-        private Func<T, string> validation = null;
+        private Signal connectedSignal;
+        public override Signal ConnectedSignal
+        {
+            get
+            {
+                return connectedSignal;
+            }
+            set
+            {
+                connectedSignal = value;
+                IsSignalAttached = connectedSignal is not null;
+                OnPropertyChanged();
+            }
+        }
+
+
+        private readonly Func<T, string> validation = null;
 
 
 
@@ -137,12 +208,31 @@ namespace ExpandScadaEditor.ScreenEditor.Items.Properties
         }
 
 
+        private Command attachSignal;
+        public override Command AttachSignal
+        {
+            get
+            {
+                return attachSignal ??
+                    (attachSignal = new Command(obj =>
+                    {
+                        var attachSignalWindow = new PropertySignalSelection(this);
+                        attachSignalWindow.ShowDialog();
+                    },
+                    obj =>
+                    {
+                        return CanConnectSignal;
+                    }));
+            }
+        }
+
+
 
         public string this[string columnName]
         {
             get
             {
-                return validation is null ? String.Empty : validation(_value);
+                return validation is null ? String.Empty : validation(tmpValueForValidationMessage);
             }
         }
 

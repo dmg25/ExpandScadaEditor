@@ -22,14 +22,38 @@ using System.Reflection;
 namespace ExpandScadaEditor.ScreenEditor.Items
 {
 
-    /*      Properties
+    /*      Properties for basic control
      *      
-     *  
-     *  - create dictionary or observable collection to collect these properties. Try to make it not so ugly
-     *  - prepare some view for adequate showing of these properties on editor
-     *      - create listview for all parameters. 
-     *      - if there are some groups - we can split them on groups like in VS
-     *      - in the bottom - show description to each parameter if it is selected
+     *      Common
+     *          ID
+     *          Name
+     *          Visible
+     *          Enabled
+     *      
+     *      Layout
+     *          X
+     *          Y
+     *          Width
+     *          Height
+     *          Z-index ??? not for signal connection
+     *          Rotation (for future)
+     *          
+     *      Brush
+     *          Background
+     *          Foreground
+     *          Opacity
+     *          BorderThickness
+     *          BorderBrush
+     *          
+     *          
+     *      
+     *      Text
+     *          FontWeight
+     *          FontStyle
+     *          FontStretch
+     *          FontSize
+     *          FontFamily
+     *          
      * 
      * 
      * 
@@ -66,47 +90,33 @@ namespace ExpandScadaEditor.ScreenEditor.Items
 
         //};
 
-        private ObservableCollection<ElementProperty> elementProperties = new ObservableCollection<ElementProperty>();
-        public ObservableCollection<ElementProperty> ElementProperties
-        {
-            get
-            {
-                return elementProperties;
-            }
-            set
-            {
-                elementProperties = value;
-                OnPropertyChanged();
-            }
-        }
-
-        private ObservableCollection<ElementProperty<double>> elementPropertiesTest = new ObservableCollection<ElementProperty<double>>();
-        public ObservableCollection<ElementProperty<double>> ElementPropertiesTest
-        {
-            get
-            {
-                return elementPropertiesTest;
-            }
-            set
-            {
-                elementPropertiesTest = value;
-                OnPropertyChanged();
-            }
-        }
-
-        //private double testProp1;
-        //public double TestProp1
+        //private ObservableCollection<ElementProperty> elementProperties = new ObservableCollection<ElementProperty>();
+        //public ObservableCollection<ElementProperty> ElementProperties
         //{
         //    get
         //    {
-        //        return testProp1;
+        //        return elementProperties;
         //    }
         //    set
         //    {
-        //        testProp1 = value;
-        //        //NotifyPropertyChanged();
+        //        elementProperties = value;
+        //        OnPropertyChanged();
         //    }
         //}
+
+        private ObservableCollection<GroupOfProperties> elementPropertyGroups = new ObservableCollection<GroupOfProperties>();
+        public ObservableCollection<GroupOfProperties> ElementPropertyGroups
+        {
+            get
+            {
+                return elementPropertyGroups;
+            }
+            set
+            {
+                elementPropertyGroups = value;
+            }
+        }
+
 
 
 
@@ -138,6 +148,7 @@ namespace ExpandScadaEditor.ScreenEditor.Items
             set
             {
                 zoomedCcoordX = value;
+                Canvas.SetLeft(this, zoomedCcoordX);
                 //NotifyPropertyChanged();
             }
         }
@@ -152,6 +163,7 @@ namespace ExpandScadaEditor.ScreenEditor.Items
             set
             {
                 zoomedCcoordY = value;
+                Canvas.SetTop(this, zoomedCcoordY);
                 //NotifyPropertyChanged();
             }
         }
@@ -207,8 +219,8 @@ namespace ExpandScadaEditor.ScreenEditor.Items
 
                 ZoomedCoordX = CoordX * zoomCoef;
                 ZoomedCoordY = CoordY * zoomCoef;
-                Canvas.SetLeft(this, this.ZoomedCoordX);
-                Canvas.SetTop(this, this.ZoomedCoordY);
+                //Canvas.SetLeft(this, this.ZoomedCoordX);
+                //Canvas.SetTop(this, this.ZoomedCoordY);
 
                 //NotifyPropertyChanged();
             }
@@ -667,8 +679,8 @@ namespace ExpandScadaEditor.ScreenEditor.Items
                     {
                         Height = e.NewHeight;
                     }
-                    Canvas.SetLeft(this, this.ZoomedCoordX);
-                    Canvas.SetTop(this, this.ZoomedCoordY);
+                    //Canvas.SetLeft(this, this.ZoomedCoordX);
+                    //Canvas.SetTop(this, this.ZoomedCoordY);
                     break;
 
             }
@@ -691,29 +703,6 @@ namespace ExpandScadaEditor.ScreenEditor.Items
             e.Handled = true;
         }
 
-     //   private void ChangeZoom(double scaleCoef)
-     //   {
-
-     //       /*
-     //        * - Changing properties
-     //*              - Width/Height
-     //*              - X/Y coordinates
-     //*              - Text font
-     //*              - Line thickness? 
-     //*              - Resize borders (???)
-     //        * */
-
-     //       //ZoomCoef = scaleCoef;
-
-     //       base.Width = Width * scaleCoef;
-     //       base.Height = Height * scaleCoef;
-
-     //       ZoomedCoordX = CoordX * scaleCoef;
-     //       ZoomedCoordY = CoordY * scaleCoef;
-     //       Canvas.SetLeft(this, this.ZoomedCoordX);
-     //       Canvas.SetTop(this, this.ZoomedCoordY);
-
-     //   }
 
         Point UnzoomCoordinates(Point zoomedCoordinates)
         {
@@ -722,7 +711,8 @@ namespace ExpandScadaEditor.ScreenEditor.Items
 
 
 
-        public void AddEditableProperty<T>(string propertyName,
+        public ElementProperty<T> CreateEditableProperty<T>(
+            string propertyName,
             string description,
             Func<T, string> validation = null,
             bool canConnectSignal = false,
@@ -745,7 +735,7 @@ namespace ExpandScadaEditor.ScreenEditor.Items
             {
                 if (e.PropertyName == "Value")
                 {
-                    this.GetType().GetProperty(propertyName).SetValue(this, ((ElementProperty)sender).Value);
+                    this.GetType().GetProperty(propertyName).SetValue(this, ((ElementProperty<T>)sender).Value);
                 }
             };
 
@@ -753,19 +743,25 @@ namespace ExpandScadaEditor.ScreenEditor.Items
             {
                 if (e.PropertyName == propertyName)
                 {
-                    newProperty.Value = sender.GetType().GetProperty(propertyName).GetValue(sender, null);
+                    newProperty.Value = (T)sender.GetType().GetProperty(propertyName).GetValue(sender, null);
                 }
             };
 
             // set on element 
 
-            ElementProperties.Add(newProperty);
+            //ElementProperties.Add(newProperty);
+            return newProperty;
 
         }
 
-        public void AddEditablePropertyTest(string propertyName,
+
+        public ElementProperty<T> CreateEditableDependencyProperty<T>(
+            string propertyName,
             string description,
-            Func<double, string> validation = null,
+            
+
+
+            Func<T, string> validation = null,
             bool canConnectSignal = false,
             bool editable = true,
             string customName = null
@@ -773,7 +769,7 @@ namespace ExpandScadaEditor.ScreenEditor.Items
         {
             var propertyInfo = this.GetType().GetProperty(propertyName);
 
-            ElementProperty<double> newProperty = new ElementProperty<double>(
+            ElementProperty<T> newProperty = new ElementProperty<T>(
                 customName is null ? propertyName : customName,
                 description,
                 validation,
@@ -786,7 +782,7 @@ namespace ExpandScadaEditor.ScreenEditor.Items
             {
                 if (e.PropertyName == "Value")
                 {
-                    this.GetType().GetProperty(propertyName).SetValue(this, ((ElementProperty)sender).Value);
+                    this.GetType().GetProperty(propertyName).SetValue(this, ((ElementProperty<T>)sender).Value);
                 }
             };
 
@@ -794,34 +790,43 @@ namespace ExpandScadaEditor.ScreenEditor.Items
             {
                 if (e.PropertyName == propertyName)
                 {
-                    newProperty.Value = sender.GetType().GetProperty(propertyName).GetValue(sender, null);
+                    newProperty.Value = (T)sender.GetType().GetProperty(propertyName).GetValue(sender, null);
                 }
             };
 
             // set on element 
 
-            ElementPropertiesTest.Add(newProperty);
+            //ElementProperties.Add(newProperty);
+            return newProperty;
 
         }
 
 
-
         private void CreateEditableProperties()
         {
-            //AddEditableProperty<int>(nameof(Id), "Id of element", editable: false, customName: "ID");
-            //AddEditableProperty<string>(nameof(Name), "Name of the element");
-            //AddEditableProperty<double>(nameof(Height), "Height in px", positiveDoubleValidation);
-            //AddEditableProperty<double>(nameof(Width), "Width in px", positiveDoubleValidation);
-            //AddEditableProperty<double>(nameof(CoordX), "Coordinate X", customName: "X");
-            //AddEditableProperty<double>(nameof(CoordY), "Coordinate Y", customName: "Y");
+            //////////////////////////////create method to initialize editable property based on dependancy property
+            ////////////////////////////// make some research: can we get onchangevalue event? if yes - should be easy
 
-            //AddEditableProperty<int>(nameof(Id), "Id of element", editable: false, customName: "ID");
-            //AddEditableProperty<string>(nameof(Name), "Name of the element");
-            AddEditablePropertyTest(nameof(Height), "Height in px", positiveDoubleValidation);
-            AddEditablePropertyTest(nameof(Width), "Width in px", positiveDoubleValidation);
-            AddEditablePropertyTest(nameof(CoordX), "Coordinate X", customName: "X");
-            AddEditablePropertyTest(nameof(CoordY), "Coordinate Y", customName: "Y");
 
+            GroupOfProperties newGroup = new GroupOfProperties("Common", new ObservableCollection<ElementProperty>()
+            {
+                CreateEditableProperty<int>(nameof(Id), "Id of element", editable: false, customName: "ID"),
+                CreateEditableProperty<string>(nameof(Name), "Name of the element"),
+                //CreateEditableProperty<bool>(nameof(IsVisible), "Visible"),
+
+            });
+
+            ElementPropertyGroups.Add(newGroup);
+
+            newGroup = new GroupOfProperties("Layout", new ObservableCollection<ElementProperty>()
+            {
+                CreateEditableProperty<double>(nameof(Height), "Height in px", positiveDoubleValidation),
+                CreateEditableProperty<double>(nameof(Width), "Width in px", positiveDoubleValidation),
+                CreateEditableProperty<double>(nameof(CoordX), "Coordinate X", customName: "X", canConnectSignal: true),
+                CreateEditableProperty<double>(nameof(CoordY), "Coordinate Y", customName: "Y", canConnectSignal: true),
+            });
+
+            ElementPropertyGroups.Add(newGroup);
 
         }
 
