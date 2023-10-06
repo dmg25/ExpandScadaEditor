@@ -815,7 +815,14 @@ namespace ExpandScadaEditor.ScreenEditor.Items
             {
                 CreateEditableProperty<int>(nameof(Id), "Id of element", editable: false, customName: "ID"),
                 CreateEditableProperty<string>(nameof(Name), "Name of the element"),
-                CreateEditableDependencyProperty<double>(nameof(Opacity), "Opacity"),
+                CreateEditableDependencyProperty<double>(nameof(Opacity), "Opacity", (val) =>
+                { 
+                    if (val < 0 || val > 1)
+                    {
+                        return "Value must be between 0 and 1";
+                    }
+                    return string.Empty;
+                }),
             });
 
             ElementPropertyGroups.Add(newGroup);

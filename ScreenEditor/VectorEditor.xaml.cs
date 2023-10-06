@@ -287,15 +287,16 @@ namespace ExpandScadaEditor.ScreenEditor
             if (item != null)
             {
                 // TODO this is only for cosmetics - solve this problem late
-                 // One problem in this place.If I do some actions with element from catalog, then it looks like non - initialized, 
-                 //it is kinda we here see right element, but on list shown some else.I can not use CatalogMode because of it and
-                 //Cursor drops every time -looks not perfect.
+                // One problem in this place.If I do some actions with element from catalog, then it looks like non - initialized, 
+                //it is kinda we here see right element, but on list shown some else.I can not use CatalogMode because of it and
+                //Cursor drops every time -looks not perfect.
 
-                 //If you check dynamical tree in debugger - these properties crossed. why? check this.
+                //If you check dynamical tree in debugger - these properties crossed. why? check this.
 
                 var element = item.Content as ScreenElement;
                 //element.Cursor = Cursors.SizeAll;
                 elementFromCatalog = (ScreenElement)Activator.CreateInstance(element.GetType());
+                elementFromCatalog.InitializeFromAnotherElement(element);
                 //element.CatalogMode = true;
             }
         }

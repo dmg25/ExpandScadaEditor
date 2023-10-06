@@ -724,6 +724,7 @@ namespace ExpandScadaEditor.ScreenEditor
             {
                 var type = copyFromElements[i].GetType();
                 var tmpElement = (ScreenElement)Activator.CreateInstance(type);
+                tmpElement.InitializeFromAnotherElement(copyFromElements[i]);
                 tmpElement.Id = -9999 + i;
                 tmpElement.Name = $"TMP_FOLLOWER_{i}";
                 tmpElement.Opacity = 0.5;

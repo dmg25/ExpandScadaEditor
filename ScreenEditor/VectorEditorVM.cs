@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using ExpandScadaEditor.ScreenEditor.Items;
 using System.Collections.ObjectModel;
 using System.Windows.Input;
+using ExpandScadaEditor.ScreenEditor.Items.Catalog;
 
 namespace ExpandScadaEditor.ScreenEditor
 {
@@ -452,6 +453,8 @@ namespace ExpandScadaEditor.ScreenEditor
         {
             Items.Add(new TestItem2() { CatalogMode = true, Id = -111});
             Items.Add(new TestItem2() { CatalogMode = true, Id = -222 });
+            Items.Add(new RectangleElement() { CatalogMode = true, Id = -333, Width = 50, Height = 50 });
+            Items.Add(new RectangleElement() { CatalogMode = true, Id = -444, Width = 50, Height = 50 });
 
             // Create/Load elements VM must be created automatically for each
             // TODO move it to loading process or smth
@@ -460,9 +463,9 @@ namespace ExpandScadaEditor.ScreenEditor
             AddNewScreenElement(new TestItem2() { CoordX = 100, CoordY = 200, Name = "third"});
 
 
+            AddNewScreenElement(new RectangleElement() { CoordX = 300, CoordY = 300, Name = "rect1", Width = 50, Height = 50 }) ;
 
-
-
+            //AddNewScreenElement(new ScreenElementContainer( new RectangleElement() { CoordX = 300, CoordY = 300, Name = "rect1", Width = 50, Height = 50 }));
 
 
 
