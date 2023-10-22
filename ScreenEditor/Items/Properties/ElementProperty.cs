@@ -56,12 +56,6 @@ namespace ExpandScadaEditor.ScreenEditor.Items.Properties
         public bool Editable { get; set; }
         public ConnectedSignalMode SignalMode { get; set; } = ConnectedSignalMode.ReadOnly;
 
-        //public virtual object Value
-        //{
-        //    get;
-        //    set;
-        //}
-
         public virtual Type PropertyType
         {
             get;
@@ -100,28 +94,6 @@ namespace ExpandScadaEditor.ScreenEditor.Items.Properties
 
     public class ElementProperty<T> : ElementProperty, IDataErrorInfo
     {
-
-        //private T _value;
-        //public override object Value
-        //{
-        //    get
-        //    {
-        //        return this._value;
-        //    }
-        //    set
-        //    {
-        //        this._value = (T)value;
-
-        //        if (!EqualityComparer<T>.Default.Equals(_value, (T)value))
-        //        {
-        //            OnPropertyChangedNotEqual();
-        //        }
-
-
-        //        this.OnPropertyChanged();
-        //    }
-        //}
-
         private T tmpValueForValidationMessage;
 
         private T _value;
@@ -183,10 +155,7 @@ namespace ExpandScadaEditor.ScreenEditor.Items.Properties
             }
         }
 
-
         private readonly Func<T, string> validation = null;
-
-
 
         public ElementProperty(string name, 
             string description, 
@@ -239,8 +208,6 @@ namespace ExpandScadaEditor.ScreenEditor.Items.Properties
             }
         }
 
-
-
         public string this[string columnName]
         {
             get
@@ -253,22 +220,5 @@ namespace ExpandScadaEditor.ScreenEditor.Items.Properties
         {
             get { throw new NotImplementedException(); }
         }
-
-
-
-
-
     }
-
-
-
-
-
-
-
-
-
-
-
-
 }

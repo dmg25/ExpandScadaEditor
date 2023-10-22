@@ -8,13 +8,7 @@
              xmlns:helpers="clr-namespace:ExpandScadaEditor.ScreenEditor.WorkspaceHelperControls"
              mc:Ignorable="d" 
              >
-    <!--<UserControl.Resources>
-        <local:TestItem2VM x:Key="ViewModel" />
-    </UserControl.Resources>-->
-    <Grid  ><!--DataContext="{StaticResource ViewModel}"-->
+    <Grid>
         <TextBlock Text="Hello there" Width="auto" Height="auto" Background="DarkCyan" TextAlignment="Center" FontSize="20"/>
-        <!--<helpers:ElementResizingBorder x:Name="RESIZE_BORDER"/>
-        <helpers:ElementMovingBorder x:Name="MOVING_BORDER"/>
-        <helpers:MouseOverElementBorder x:Name="COVER_BORDER"/>-->
     </Grid>
 </local:ScreenElementContent>

@@ -23,10 +23,6 @@ namespace ExpandScadaEditor.ScreenEditor.Items
         public TestItem2() : base()
         {
             InitializeComponent();
-
-            // TMP solution for default values initialization
-            //Height = 50;
-            //Width = 50;
         }
     }
 }

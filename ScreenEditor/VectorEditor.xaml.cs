@@ -185,14 +185,6 @@ namespace ExpandScadaEditor.ScreenEditor
     /// </summary>
     public partial class VectorEditor : UserControl
     {
-        //const double BORDER_OFFSET = 5d;
-
-        //const string MOUSE_OVER_SELECTED = "MOUSE_OVER_SELECTED";
-        //const string SELECTING_RECTANGLE = "SELECTING_RECTANGLE";
-        //const string SELECTED_RECTANGLE = "SELECTED_RECTANGLE";
-
-        //MouseMovingMode CurrentMouseMovingMode = MouseMovingMode.None;
-
         protected VectorEditorVM VM
         {
             get { return (VectorEditorVM)Resources["ViewModel"]; }
@@ -207,13 +199,13 @@ namespace ExpandScadaEditor.ScreenEditor
 
            
             // TODO For tests, later make it better
-            ItemsTemplateSelector itemsTemplateSelector = (ItemsTemplateSelector)Resources["ItemsTemplateSelector"];
-            Dictionary<string, DataTemplate> previewTemplates = new Dictionary<string, DataTemplate>
-            {
-                {nameof(TestItem1VM), CreateTemplateByName(typeof(TestItem1)) },
-                {nameof(TestItem2VM), CreateTemplateByName(typeof(TestItem2)) }
-            };
-            itemsTemplateSelector.previewTemplates = previewTemplates;
+            //ItemsTemplateSelector itemsTemplateSelector = (ItemsTemplateSelector)Resources["ItemsTemplateSelector"];
+            //Dictionary<string, DataTemplate> previewTemplates = new Dictionary<string, DataTemplate>
+            //{
+            //    //{nameof(TestItem1VM), CreateTemplateByName(typeof(TestItem1)) },
+            //    {nameof(TestItem2VM), CreateTemplateByName(typeof(TestItem2)) }
+            //};
+            //itemsTemplateSelector.previewTemplates = previewTemplates;
 
             
             //VM.Initialize();

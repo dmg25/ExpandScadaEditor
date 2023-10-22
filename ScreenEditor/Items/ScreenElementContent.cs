@@ -155,10 +155,6 @@ namespace ExpandScadaEditor.ScreenEditor.Items
             return newProperty;
         }
 
-
-
-
-
         public event PropertyChangedEventHandler PropertyChanged;
         public void OnPropertyChanged([CallerMemberName] string prop = "")
         {
