@@ -18,7 +18,7 @@ namespace ExpandScadaEditor.ScreenEditor.Items.Catalog
     /// <summary>
     /// Логика взаимодействия для RectangleElement.xaml
     /// </summary>
-    public partial class RectangleElement : ScreenElement
+    public partial class RectangleElement : ScreenElementContent
     {
         public RectangleElement(): base()
         {

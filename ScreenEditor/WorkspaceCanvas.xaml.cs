@@ -28,7 +28,7 @@ namespace ExpandScadaEditor.ScreenEditor
 
         List<(int id, double xCoord, double yCoord)> selectedPositionsBeforeMoving = new List<(int id, double xCoord, double yCoord)>();
         MouseMovingMode preMode = MouseMovingMode.None;
-        ScreenElement tmpPreSelectedElement = new ScreenElement();
+        ScreenElement tmpPreSelectedElement = new ScreenElement(new ScreenElementContent()); // TODO ??? was drunk ???
         int selectedElementIndexByMouse = -1;
         internal ObservableCollection<ScreenElement> TmpFollowerElements = new ObservableCollection<ScreenElement>();
 
@@ -235,6 +235,8 @@ namespace ExpandScadaEditor.ScreenEditor
             e.Element.MouseLeftButtonUp += Element_MouseLeftButtonUp;
             //e.Element.OnElementResizing += Element_OnElementResizing;
             e.Element.ElementSizeChanged += Element_ElementResized;
+            e.Element.WorkspaceHeight = this.Height;
+            e.Element.WorkspaceWidth = this.Width;
         }
 
 
@@ -723,7 +725,7 @@ namespace ExpandScadaEditor.ScreenEditor
             for (int i = 0; i < copyFromElements.Count; i++)
             {
                 var type = copyFromElements[i].GetType();
-                var tmpElement = (ScreenElement)Activator.CreateInstance(type);
+                var tmpElement = (ScreenElement)Activator.CreateInstance(type, copyFromElements[i].ElementContent);
                 tmpElement.InitializeFromAnotherElement(copyFromElements[i]);
                 tmpElement.Id = -9999 + i;
                 tmpElement.Name = $"TMP_FOLLOWER_{i}";

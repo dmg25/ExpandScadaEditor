@@ -127,6 +127,23 @@ namespace ExpandScadaEditor.ScreenEditor
      * 
      * */
 
+
+    //TODO minimum list BEFORE go to next step
+    // *
+    // *  1. Catalog list does not show last element - fix it
+    // *  2. Plan and create saving method.
+    // *      - Add button for saving with file type selecton
+    // *      - Find out how to save all elements without borders and root grid if not necessary
+    // *      - save only properties from list.Others - dont care
+    // *      - manually add some bindings to existing signals
+    // *          - Coordinates
+    // *          - size
+    // *          - opacity
+    // *  3. Start and test that saved screens can work
+    // *
+
+
+
     /*  TODO FUNCTIONALITY
      *  
      *  1. When a group of elements selected show special icon "+" with arrows, to move whole group. 
@@ -295,7 +312,7 @@ namespace ExpandScadaEditor.ScreenEditor
 
                 var element = item.Content as ScreenElement;
                 //element.Cursor = Cursors.SizeAll;
-                elementFromCatalog = (ScreenElement)Activator.CreateInstance(element.GetType());
+                elementFromCatalog = (ScreenElement)Activator.CreateInstance(element.GetType(), element.ElementContent);
                 elementFromCatalog.InitializeFromAnotherElement(element);
                 //element.CatalogMode = true;
             }

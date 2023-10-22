@@ -18,15 +18,15 @@ namespace ExpandScadaEditor.ScreenEditor.Items
     /// <summary>
     /// Логика взаимодействия для TestItem2.xaml
     /// </summary>
-    public partial class TestItem2 : ScreenElement
+    public partial class TestItem2 : ScreenElementContent
     {
-        public TestItem2()
+        public TestItem2() : base()
         {
             InitializeComponent();
 
             // TMP solution for default values initialization
-            Height = 50;
-            Width = 50;
+            //Height = 50;
+            //Width = 50;
         }
     }
 }

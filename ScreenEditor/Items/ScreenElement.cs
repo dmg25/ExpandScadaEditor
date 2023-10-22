@@ -123,6 +123,8 @@ namespace ExpandScadaEditor.ScreenEditor.Items
 
         //public event EventHandler<ResizingEventArgs> OnElementResizing;
         public event EventHandler ElementSizeChanged;
+    
+        public ScreenElementContent ElementContent { get; set; }
 
         private int id;
         public int Id
@@ -416,8 +418,13 @@ namespace ExpandScadaEditor.ScreenEditor.Items
         }
 
 
-        public ScreenElement()
+        public ScreenElement(ScreenElementContent contentElement/*, double workspaceWidth, double workspaceHeight*/)
         {
+            //WorkspaceHeight = workspaceHeight;
+            //WorkspaceWidth = workspaceWidth;
+
+            ElementContent = contentElement;
+
             Initialized += ScreenElement_Initialized;
             MouseEnter += ScreenElement_MouseEnter;
             MouseLeave += ScreenElement_MouseLeave;
@@ -444,6 +451,19 @@ namespace ExpandScadaEditor.ScreenEditor.Items
 
         }
 
+        //public void InitializeItself()
+        //{
+        //    //Initialized += ScreenElement_Initialized;
+
+        //    ScreenElement_Initialized(null, new EventArgs());
+
+        //    MouseEnter += ScreenElement_MouseEnter;
+        //    MouseLeave += ScreenElement_MouseLeave;
+
+
+        //    CreateEditableProperties();
+        //}
+
         public void InitializeFromAnotherElement(ScreenElement element)
         {
             // TODO Expand this method if add new category of settings/ settig
@@ -461,8 +481,10 @@ namespace ExpandScadaEditor.ScreenEditor.Items
             //Height = element.Height;
 
             Name = element.Name;
-           // ToDelete = element.ToDelete;
+            // ToDelete = element.ToDelete;
+
             
+
         }
 
 
@@ -849,7 +871,7 @@ namespace ExpandScadaEditor.ScreenEditor.Items
         {
             // TODO put here list of properties!!!!!!!!!!!!!!!!!!!!!!!!!!!!
             //      now use only for tests!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
+            //      modify this method to check which cintent do we have!!!!!!!!!!
 
             if (elementA is null && elementB is null)
             {

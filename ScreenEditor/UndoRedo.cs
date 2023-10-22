@@ -42,7 +42,7 @@ namespace ExpandScadaEditor.ScreenEditor
             foreach (var element in initElements)
             {
                 var type = element.GetType();
-                var newItem = (ScreenElement)Activator.CreateInstance(type);
+                var newItem = (ScreenElement)Activator.CreateInstance(type, element.ElementContent);
                 newItem.InitializeFromAnotherElement(element);
                 clonedElements.Add(newItem);
                 existingElementsId.Add(element.Id);
@@ -90,7 +90,7 @@ namespace ExpandScadaEditor.ScreenEditor
                         if (currentElement != elementInPastAction)
                         {
                             var type = currentElement.GetType();
-                            var newItem = (ScreenElement)Activator.CreateInstance(type);
+                            var newItem = (ScreenElement)Activator.CreateInstance(type, currentElement.ElementContent);
                             newItem.InitializeFromAnotherElement(currentElement);
                             changedElements.Add(newItem);
                         }
@@ -113,7 +113,7 @@ namespace ExpandScadaEditor.ScreenEditor
                         if (!existingElementsId.Contains(currentElement.Id))
                         {
                             var type = currentElement.GetType();
-                            var newItem = (ScreenElement)Activator.CreateInstance(type);
+                            var newItem = (ScreenElement)Activator.CreateInstance(type, currentElement.ElementContent);
                             newItem.InitializeFromAnotherElement(currentElement);
                             createdElements.Add(newItem);
                             existingElementsId.Add(newItem.Id);
@@ -152,7 +152,7 @@ namespace ExpandScadaEditor.ScreenEditor
                             }
 
                             var type = elementInPastAction.GetType();
-                            var newItem = (ScreenElement)Activator.CreateInstance(type);
+                            var newItem = (ScreenElement)Activator.CreateInstance(type, elementInPastAction.ElementContent);
                             newItem.InitializeFromAnotherElement(elementInPastAction);
                             deletedElements.Add(newItem);
                         }
@@ -229,7 +229,7 @@ namespace ExpandScadaEditor.ScreenEditor
             foreach (var element in elementsToReturn.elements)
             {
                 var type = element.GetType();
-                var newItem = (ScreenElement)Activator.CreateInstance(type);
+                var newItem = (ScreenElement)Activator.CreateInstance(type, element.ElementContent);
                 newItem.InitializeFromAnotherElement(element);
                 clonedElements.Add(newItem);
             }
@@ -311,7 +311,7 @@ namespace ExpandScadaEditor.ScreenEditor
             foreach (var element in elementsToReturn.elements)
             {
                 var type = element.GetType();
-                var newItem = (ScreenElement)Activator.CreateInstance(type);
+                var newItem = (ScreenElement)Activator.CreateInstance(type, element.ElementContent);
                 newItem.InitializeFromAnotherElement(element);
                 clonedElements.Add(newItem);
             }

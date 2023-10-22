@@ -451,19 +451,34 @@ namespace ExpandScadaEditor.ScreenEditor
 
         public void Initialize()
         {
-            Items.Add(new TestItem2() { CatalogMode = true, Id = -111});
-            Items.Add(new TestItem2() { CatalogMode = true, Id = -222 });
-            Items.Add(new RectangleElement() { CatalogMode = true, Id = -333, Width = 50, Height = 50 });
-            Items.Add(new RectangleElement() { CatalogMode = true, Id = -444, Width = 50, Height = 50 });
+            //Items.Add(new TestItem2() { CatalogMode = true, Id = -111});
+            //Items.Add(new TestItem2() { CatalogMode = true, Id = -222 });
+
+            Items.Add(new ScreenElementContainer(new TestItem2()) { CatalogMode = true, Id = -111, Width = 50, Height = 50 });
+            Items.Add(new ScreenElementContainer(new TestItem2()) { CatalogMode = true, Id = -222, Width = 50, Height = 50 });
+
+            Items.Add(new ScreenElementContainer(new RectangleElement()) { CatalogMode = true, Id = -333, Width = 50, Height = 50 });
+            Items.Add(new ScreenElementContainer(new RectangleElement()) { CatalogMode = true, Id = -444, Width = 50, Height = 50 });
+
+
+            //Items.Add(new RectangleElement() { CatalogMode = true, Id = -333, Width = 50, Height = 50 });
+            //Items.Add(new RectangleElement() { CatalogMode = true, Id = -444, Width = 50, Height = 50 });
 
             // Create/Load elements VM must be created automatically for each
             // TODO move it to loading process or smth
-            AddNewScreenElement(new TestItem2() { CoordX = 10, CoordY = 20, Name = "first"});
-            AddNewScreenElement(new TestItem2() { CoordX = 100, CoordY = 100, Name = "second" });
-            AddNewScreenElement(new TestItem2() { CoordX = 100, CoordY = 200, Name = "third"});
+            //AddNewScreenElement(new TestItem2() { CoordX = 10, CoordY = 20, Name = "first"});
+            //AddNewScreenElement(new TestItem2() { CoordX = 100, CoordY = 100, Name = "second" });
+            //AddNewScreenElement(new TestItem2() { CoordX = 100, CoordY = 200, Name = "third"});
+
+            AddNewScreenElement(new ScreenElementContainer(new TestItem2()) { CoordX = 10, CoordY = 20, Name = "first", Width = 50, Height = 50 });
+            AddNewScreenElement(new ScreenElementContainer(new TestItem2()) { CoordX = 100, CoordY = 100, Name = "second", Width = 50, Height = 50 });
+            AddNewScreenElement(new ScreenElementContainer(new TestItem2()) { CoordX = 100, CoordY = 200, Name = "third", Width = 50, Height = 50 });
 
 
-            AddNewScreenElement(new RectangleElement() { CoordX = 300, CoordY = 300, Name = "rect1", Width = 50, Height = 50 }) ;
+
+            AddNewScreenElement(new ScreenElementContainer(new RectangleElement()) { CoordX = 300, CoordY = 300, Name = "rect1", Width = 50, Height = 50 });
+
+            //AddNewScreenElement(new RectangleElement() { CoordX = 300, CoordY = 300, Name = "rect1", Width = 50, Height = 50 }) ;
 
             //AddNewScreenElement(new ScreenElementContainer( new RectangleElement() { CoordX = 300, CoordY = 300, Name = "rect1", Width = 50, Height = 50 }));
 
@@ -555,7 +570,7 @@ namespace ExpandScadaEditor.ScreenEditor
             foreach (var element in elements)
             {
                 var type = element.GetType();
-                var newItem = (ScreenElement)Activator.CreateInstance(type);
+                var newItem = (ScreenElement)Activator.CreateInstance(type, element.ElementContent);
                 newItem.InitializeFromAnotherElement(element);
                 result.Add(newItem);
             }

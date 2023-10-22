@@ -1,4 +1,4 @@
-﻿<local:ScreenElement
+﻿<local:ScreenElementContent
     x:Class="ExpandScadaEditor.ScreenEditor.Items.TestItem2"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
@@ -8,13 +8,13 @@
              xmlns:helpers="clr-namespace:ExpandScadaEditor.ScreenEditor.WorkspaceHelperControls"
              mc:Ignorable="d" 
              >
-    <UserControl.Resources>
+    <!--<UserControl.Resources>
         <local:TestItem2VM x:Key="ViewModel" />
-    </UserControl.Resources>
-    <Grid DataContext="{StaticResource ViewModel}" >
+    </UserControl.Resources>-->
+    <Grid  ><!--DataContext="{StaticResource ViewModel}"-->
         <TextBlock Text="Hello there" Width="auto" Height="auto" Background="DarkCyan" TextAlignment="Center" FontSize="20"/>
-        <helpers:ElementResizingBorder x:Name="RESIZE_BORDER"/>
+        <!--<helpers:ElementResizingBorder x:Name="RESIZE_BORDER"/>
         <helpers:ElementMovingBorder x:Name="MOVING_BORDER"/>
-        <helpers:MouseOverElementBorder x:Name="COVER_BORDER"/>
+        <helpers:MouseOverElementBorder x:Name="COVER_BORDER"/>-->
     </Grid>
-</local:ScreenElement>
+</local:ScreenElementContent>
