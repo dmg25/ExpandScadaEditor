@@ -27,6 +27,12 @@ namespace ExpandScadaEditor.ScreenEditor.Items
             InitializeComponent();
 
             var newItem = (ScreenElementContent)Activator.CreateInstance(contentElement.GetType());
+
+            foreach (var group in newItem.ElementPropertyGroups)
+            {
+                base.ElementPropertyGroups.Add(group);
+            }
+
             RootContainer.Children.Insert(0, newItem);
         }
     }

@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
-
+using System.Windows;
 using Common.Gateway;
 
 namespace ExpandScadaEditor.ScreenEditor.Items.Properties
@@ -50,10 +50,13 @@ namespace ExpandScadaEditor.ScreenEditor.Items.Properties
     {
         public string Name { get; set; }
         public string Description { get; set; }
-
+        public virtual object ValueObj { get; set; }
         public bool CanConnectSignal { get; set; }
         public virtual bool IsSignalAttached { get; set; }
         public bool Editable { get; set; }
+        public bool IsDependancyConnected { get; set; }
+        //public DependencyObject ElementDependancyObject { get; set; } = null;
+
         public ConnectedSignalMode SignalMode { get; set; } = ConnectedSignalMode.ReadOnly;
 
         public virtual Type PropertyType
@@ -72,8 +75,6 @@ namespace ExpandScadaEditor.ScreenEditor.Items.Properties
             get;
         }
 
-
-
         public event PropertyChangedEventHandler PropertyChanged;
         public void OnPropertyChanged([CallerMemberName] string prop = "")
         {
@@ -89,6 +90,35 @@ namespace ExpandScadaEditor.ScreenEditor.Items.Properties
         {
             PropertyChangedNotEqual?.Invoke(this, new PropertyChangedEventArgs(prop));
         }
+
+        static bool PropertiesAreEqual(ElementProperty elementA, ElementProperty elementB)
+        {
+            if (elementA is null && elementB is null)
+            {
+                return true;
+            }
+            else if (elementA is not null && elementB is null || elementA is null && elementB is not null)
+            {
+                return false;
+            }
+
+            return elementA.Name == elementB.Name && elementA.Description == elementB.Description
+                && elementA.Description == elementB.Description && elementA.IsSignalAttached == elementB.IsSignalAttached
+                && elementA.ConnectedSignal == elementB.ConnectedSignal && elementA.ConnectedSignal == elementB.ConnectedSignal
+                && elementA.ValueObj == elementB.ValueObj;
+        }
+
+        public static bool operator ==(ElementProperty elementA, ElementProperty elementB)
+        {
+
+            return PropertiesAreEqual(elementA, elementB);
+        }
+
+        public static bool operator !=(ElementProperty elementA, ElementProperty elementB)
+        {
+            return !PropertiesAreEqual(elementA, elementB);
+        }
+
     }
 
 
@@ -123,6 +153,23 @@ namespace ExpandScadaEditor.ScreenEditor.Items.Properties
                 }
 
                 this.OnPropertyChanged();
+            }
+        }
+
+        public override Type PropertyType
+        {
+            get
+            {
+                return typeof(T);
+            }
+        }
+
+        public override object ValueObj
+        {
+            get => Value;
+            set
+            {
+                Value = (T)value;
             }
         }
 
@@ -220,5 +267,13 @@ namespace ExpandScadaEditor.ScreenEditor.Items.Properties
         {
             get { throw new NotImplementedException(); }
         }
+
+        
+
+
+
+
+
+
     }
 }

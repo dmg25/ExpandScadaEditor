@@ -466,25 +466,25 @@ namespace ExpandScadaEditor.ScreenEditor.Items
 
         public void InitializeFromAnotherElement(ScreenElement element)
         {
-            // TODO Expand this method if add new category of settings/ settig
+            foreach (var group in ElementPropertyGroups)
+            {
+                var foundGroup = element.ElementPropertyGroups.FirstOrDefault(x => x.GroupTitle == group.GroupTitle);
+                if (foundGroup is null)
+                {
+                    continue;
+                }
 
-            // TODO!!! These settings must be united to collections in future!!!
-            id = element.id;
-            CoordX = element.CoordX;
-            CoordY = element.CoordY;
+                foreach (var property in group.ElementProperties)
+                {
+                    var fuoundProperty = foundGroup.ElementProperties.FirstOrDefault(x => x.Name == property.Name);
+                    if (fuoundProperty is null)
+                    {
+                        continue;
+                    }
 
-            // TODO is it really necessary to use Actual properties?
-            Width = element.IsLoaded ? element.ActualWidth / element.zoomCoef : element.Width;
-            Height = element.IsLoaded ? element.ActualHeight / element.zoomCoef : element.Height;
-            // Zooming experiments
-            //Width = element.Width;
-            //Height = element.Height;
-
-            Name = element.Name;
-            // ToDelete = element.ToDelete;
-
-            
-
+                    property.ValueObj = fuoundProperty.ValueObj;
+                }
+            }
         }
 
 
@@ -733,16 +733,17 @@ namespace ExpandScadaEditor.ScreenEditor.Items
 
 
 
-        public ElementProperty<T> CreateEditableProperty<T>(
+        public static ElementProperty<T> CreateEditableProperty<T>(
             string propertyName,
             string description,
+            ScreenElement elementWithProperties,
             Func<T, string> validation = null,
             bool canConnectSignal = false,
             bool editable = true,
             string customName = null
             )
         {
-            var propertyInfo = this.GetType().GetProperty(propertyName);
+            var propertyInfo = elementWithProperties.GetType().GetProperty(propertyName);
 
             ElementProperty<T> newProperty = new ElementProperty<T>(
                 customName is null ? propertyName : customName,
@@ -757,11 +758,11 @@ namespace ExpandScadaEditor.ScreenEditor.Items
             {
                 if (e.PropertyName == "Value")
                 {
-                    this.GetType().GetProperty(propertyName).SetValue(this, ((ElementProperty<T>)sender).Value);
+                    elementWithProperties.GetType().GetProperty(propertyName).SetValue(elementWithProperties, ((ElementProperty<T>)sender).Value);
                 }
             };
 
-            this.PropertyChanged += (sender, e) =>
+            elementWithProperties.PropertyChanged += (sender, e) =>
             {
                 if (e.PropertyName == propertyName)
                 {
@@ -777,9 +778,10 @@ namespace ExpandScadaEditor.ScreenEditor.Items
         }
 
 
-        public ElementProperty<T> CreateEditableDependencyProperty<T>(
+        public static ElementProperty<T> CreateEditableDependencyProperty<T>(
             string dependencyPropertyName,
             string description,
+            DependencyObject elementDependancyObject,
             Func<T, string> validation = null,
             bool canConnectSignal = false,
             bool editable = true,
@@ -787,9 +789,7 @@ namespace ExpandScadaEditor.ScreenEditor.Items
             )
         {
 
-            PropertyChangeNotifier notifier = new PropertyChangeNotifier(this, dependencyPropertyName);
-
-
+            PropertyChangeNotifier notifier = new PropertyChangeNotifier(elementDependancyObject, dependencyPropertyName);
             ElementProperty<T> newProperty = new ElementProperty<T>(
                 customName is null ? dependencyPropertyName : customName,
                 description,
@@ -798,6 +798,8 @@ namespace ExpandScadaEditor.ScreenEditor.Items
                 canConnectSignal,
                 editable);
 
+            //newProperty.ElementDependancyObject = elementDependancyObject;
+
             // Events
             // This event invokes only if value was changed - to avoid stackoverflow
             newProperty.PropertyChangedNotEqual += (sender, e) =>
@@ -805,27 +807,17 @@ namespace ExpandScadaEditor.ScreenEditor.Items
                 if (e.PropertyName == "Value")
                 {
                     notifier.Value = ((ElementProperty<T>)sender).Value;
-                    //this.GetType().GetProperty(propertyName).SetValue(this, ((ElementProperty<T>)sender).Value);
                 }
             };
-
-
 
             notifier.ValueChanged += (sender, e) =>
             {
                 var notifierFromMessage = sender as PropertyChangeNotifier;
-
                 newProperty.Value = (T)notifierFromMessage.Value;
-
-                //if (e.PropertyName == propertyName)
-                //{
-                //    newProperty.Value = (T)sender.GetType().GetProperty(propertyName).GetValue(sender, null);
-                //}
             };
 
+            newProperty.IsDependancyConnected = true;
             // set on element 
-
-            //ElementProperties.Add(newProperty);
             return newProperty;
 
         }
@@ -835,26 +827,18 @@ namespace ExpandScadaEditor.ScreenEditor.Items
         {
             GroupOfProperties newGroup = new GroupOfProperties("Common", new ObservableCollection<ElementProperty>()
             {
-                CreateEditableProperty<int>(nameof(Id), "Id of element", editable: false, customName: "ID"),
-                CreateEditableProperty<string>(nameof(Name), "Name of the element"),
-                CreateEditableDependencyProperty<double>(nameof(Opacity), "Opacity", (val) =>
-                { 
-                    if (val < 0 || val > 1)
-                    {
-                        return "Value must be between 0 and 1";
-                    }
-                    return string.Empty;
-                }),
+                ScreenElement.CreateEditableProperty<int>(nameof(Id), "Id of element", this, editable: false, customName: "ID"),
+                ScreenElement.CreateEditableProperty<string>(nameof(Name), "Name of the element", this),
             });
 
             ElementPropertyGroups.Add(newGroup);
 
             newGroup = new GroupOfProperties("Layout", new ObservableCollection<ElementProperty>()
             {
-                CreateEditableProperty<double>(nameof(Height), "Height in px", positiveDoubleValidation),
-                CreateEditableProperty<double>(nameof(Width), "Width in px", positiveDoubleValidation),
-                CreateEditableProperty<double>(nameof(CoordX), "Coordinate X", customName: "X", canConnectSignal: true),
-                CreateEditableProperty<double>(nameof(CoordY), "Coordinate Y", customName: "Y", canConnectSignal: true),
+                ScreenElement.CreateEditableProperty<double>(nameof(Height), "Height in px", this, positiveDoubleValidation),
+                ScreenElement.CreateEditableProperty<double>(nameof(Width), "Width in px", this, positiveDoubleValidation),
+                ScreenElement.CreateEditableProperty<double>(nameof(CoordX), "Coordinate X", this, customName: "X", canConnectSignal: true),
+                ScreenElement.CreateEditableProperty<double>(nameof(CoordY), "Coordinate Y", this, customName: "Y", canConnectSignal: true),
             });
 
             ElementPropertyGroups.Add(newGroup);
@@ -882,9 +866,33 @@ namespace ExpandScadaEditor.ScreenEditor.Items
                 return false;
             }
 
-            return elementA.id == elementB.id && elementA.Name == elementB.Name
-            && elementA.coordX == elementB.coordX && elementA.coordY == elementB.coordY
-            && elementA.Width == elementB.Width && elementA.Height == elementB.Height;
+            if (elementA.ElementPropertyGroups.Count != elementB.ElementPropertyGroups.Count)
+            {
+                return false;
+            }
+
+            for (int i = 0; i < elementA.ElementPropertyGroups.Count; i++)
+            {
+                if (elementA.ElementPropertyGroups[i].GroupTitle != elementB.ElementPropertyGroups[i].GroupTitle)
+                {
+                    return false;
+                }
+
+                for (int j = 0; j < elementA.ElementPropertyGroups[i].ElementProperties.Count; j++)
+                {
+                    if (elementA.ElementPropertyGroups[i].ElementProperties[j] != elementB.ElementPropertyGroups[i].ElementProperties[j])
+                    {
+                        return false;
+                    }
+                }
+            }
+
+            return true;
+
+
+            //return elementA.id == elementB.id && elementA.Name == elementB.Name
+            //&& elementA.coordX == elementB.coordX && elementA.coordY == elementB.coordY
+            //&& elementA.Width == elementB.Width && elementA.Height == elementB.Height;
             //&& elementA.ActualWidth == elementB.ActualWidth && elementA.ActualHeight == elementB.ActualHeight;
         }
 
