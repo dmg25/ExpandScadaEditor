@@ -507,9 +507,14 @@ namespace ExpandScadaEditor.ScreenEditor
             {
                 ElementsOnWorkSpace.Add(element.Id, element);
             }
-            
-            
+
+            element.ParametersChangedByUser += Element_ParametersChangedByUser;
             NewScreenElementAdded(null, new ScreenElementEventArgs() {Element = element});
+        }
+
+        private void Element_ParametersChangedByUser(object sender, EventArgs e)
+        {
+            UndoRedo.NewUserAction(ElementsOnWorkSpace);
         }
 
         public void ReplaceExistingElement(ScreenElement element)
@@ -518,6 +523,8 @@ namespace ExpandScadaEditor.ScreenEditor
             {
                 element.ZoomCoef = ZoomCoef;
                 var oldElement = ElementsOnWorkSpace[element.Id];
+                oldElement.ParametersChangedByUser -= Element_ParametersChangedByUser;
+                element.ParametersChangedByUser += Element_ParametersChangedByUser;
                 ElementsOnWorkSpace.Remove(element.Id);
                 ElementsOnWorkSpace.Add(element.Id, element);
                 ScreenElementReplaced(null, new ReplacingElementEventArgs() { OldElement = oldElement, NewElement = element });

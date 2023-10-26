@@ -520,6 +520,11 @@ namespace ExpandScadaEditor.ScreenEditor
                 e.Handled = true;
             }
         }
+
+        private void TextBox_LostFocus(object sender, RoutedEventArgs e)
+        {
+
+        }
     }
 
 

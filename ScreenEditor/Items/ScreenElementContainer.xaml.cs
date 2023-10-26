@@ -30,10 +30,20 @@ namespace ExpandScadaEditor.ScreenEditor.Items
 
             foreach (var group in newItem.ElementPropertyGroups)
             {
+                // subscribe on changing events by the way, because it was made outside of container
+                foreach (var parameter in group.ElementProperties)
+                {
+                    parameter.ParameterChangedByUser += base.NewProperty_ParameterChangedByUser;
+                }
+
                 base.ElementPropertyGroups.Add(group);
             }
 
             RootContainer.Children.Insert(0, newItem);
+
+            //after UNDO/ REDO action clean properties window(check notification?)
+            // UNDO / REDO if it was replacing - do not drop selection - try to hold it(just update)
+            //   then finally move to saving method...
         }
     }
 }

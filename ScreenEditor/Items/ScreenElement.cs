@@ -123,7 +123,8 @@ namespace ExpandScadaEditor.ScreenEditor.Items
 
         //public event EventHandler<ResizingEventArgs> OnElementResizing;
         public event EventHandler ElementSizeChanged;
-    
+        public event EventHandler ParametersChangedByUser;
+
         public ScreenElementContent ElementContent { get; set; }
 
         private int id;
@@ -432,7 +433,17 @@ namespace ExpandScadaEditor.ScreenEditor.Items
 
             CreateEditableProperties();
 
+            // subscripe on changing by user events
+            foreach (var group in ElementPropertyGroups)
+            {
+                foreach (var parameter in group.ElementProperties)
+                {
+                    parameter.ParameterChangedByUser += NewProperty_ParameterChangedByUser;
+                }
+            }
 
+
+           
 
 
 
@@ -483,6 +494,9 @@ namespace ExpandScadaEditor.ScreenEditor.Items
                     }
 
                     property.ValueObj = fuoundProperty.ValueObj;
+                    property.IsSignalAttached = fuoundProperty.IsSignalAttached;
+                    property.ConnectedSignal = fuoundProperty.ConnectedSignal;
+
                 }
             }
         }
@@ -771,12 +785,17 @@ namespace ExpandScadaEditor.ScreenEditor.Items
             };
 
             // set on element 
+           
 
             //ElementProperties.Add(newProperty);
             return newProperty;
 
         }
 
+        public void NewProperty_ParameterChangedByUser(object sender, EventArgs e)
+        {
+            ParametersChangedByUser?.Invoke(sender, new EventArgs());
+        }
 
         public static ElementProperty<T> CreateEditableDependencyProperty<T>(
             string dependencyPropertyName,

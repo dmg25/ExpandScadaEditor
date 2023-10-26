@@ -56,6 +56,7 @@ namespace ExpandScadaEditor.ScreenEditor.Items.Properties
         public bool Editable { get; set; }
         public bool IsDependancyConnected { get; set; }
         //public DependencyObject ElementDependancyObject { get; set; } = null;
+        public virtual event EventHandler ParameterChangedByUser;
 
         public ConnectedSignalMode SignalMode { get; set; } = ConnectedSignalMode.ReadOnly;
 
@@ -71,6 +72,16 @@ namespace ExpandScadaEditor.ScreenEditor.Items.Properties
         }
 
         public virtual Command AttachSignal
+        {
+            get;
+        }
+
+        public virtual Command OnGotFocus
+        {
+            get;
+        }
+
+        public virtual Command OnLostFocus
         {
             get;
         }
@@ -124,7 +135,18 @@ namespace ExpandScadaEditor.ScreenEditor.Items.Properties
 
     public class ElementProperty<T> : ElementProperty, IDataErrorInfo
     {
+        // There is a problem:
+        // On loading we reset Value a lot of times
+        // On selecting we call validation from xaml many times
+        // how to get situation when user put a value and seccessfully???
+
+        // 
+
+        private bool usersInputStarted;
+        private T preValue;
         private T tmpValueForValidationMessage;
+
+        public override event EventHandler ParameterChangedByUser;
 
         private T _value;
         public T Value
@@ -245,12 +267,73 @@ namespace ExpandScadaEditor.ScreenEditor.Items.Properties
                 return attachSignal ??
                     (attachSignal = new Command(obj =>
                     {
+                        Signal preSignal = ConnectedSignal;
                         var attachSignalWindow = new PropertySignalSelection(this);
                         attachSignalWindow.ShowDialog();
+
+                        if (preSignal != ConnectedSignal)
+                        {
+                            ParameterChangedByUser?.Invoke(this, new EventArgs());
+                        }
+
                     },
                     obj =>
                     {
                         return CanConnectSignal;
+                    }));
+            }
+        }
+
+        private Command onGotFocus;
+        public override Command OnGotFocus
+        {
+            get
+            {
+                return onGotFocus ??
+                    (onGotFocus = new Command(obj =>
+                    {
+                        // if flag Entering not set
+                        // set flag Entering started 
+                        // set tmp T value before changes
+
+                        if (!usersInputStarted)
+                        {
+                            preValue = Value;
+                            usersInputStarted = true;
+                        }
+
+
+                    },
+                    obj =>
+                    {
+                        return Editable;
+                    }));
+            }
+        }
+
+        
+        private Command onLostFocus;
+        public override Command OnLostFocus
+        {
+            get
+            {
+                return onLostFocus ??
+                    (onLostFocus = new Command(obj =>
+                    {
+                        // if flag entering was
+                        // and new value is not like tmp
+                        // shot event user action
+                        // drop entering flag
+
+                        if (usersInputStarted && !EqualityComparer<T>.Default.Equals(preValue, Value))
+                        {
+                            ParameterChangedByUser?.Invoke(this, new EventArgs());
+                            usersInputStarted = false;
+                        }
+                    },
+                    obj =>
+                    {
+                        return Editable;
                     }));
             }
         }
