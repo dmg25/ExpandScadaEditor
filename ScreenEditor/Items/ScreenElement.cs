@@ -844,7 +844,7 @@ namespace ExpandScadaEditor.ScreenEditor.Items
 
         private void CreateEditableProperties()
         {
-            GroupOfProperties newGroup = new GroupOfProperties("Common", new ObservableCollection<ElementProperty>()
+            GroupOfProperties newGroup = new GroupOfProperties("Common", false, new ObservableCollection<ElementProperty>()
             {
                 ScreenElement.CreateEditableProperty<int>(nameof(Id), "Id of element", this, editable: false, customName: "ID"),
                 ScreenElement.CreateEditableProperty<string>(nameof(Name), "Name of the element", this),
@@ -852,7 +852,7 @@ namespace ExpandScadaEditor.ScreenEditor.Items
 
             ElementPropertyGroups.Add(newGroup);
 
-            newGroup = new GroupOfProperties("Layout", new ObservableCollection<ElementProperty>()
+            newGroup = new GroupOfProperties("Layout", false, new ObservableCollection<ElementProperty>()
             {
                 ScreenElement.CreateEditableProperty<double>(nameof(Height), "Height in px", this, positiveDoubleValidation),
                 ScreenElement.CreateEditableProperty<double>(nameof(Width), "Width in px", this, positiveDoubleValidation),

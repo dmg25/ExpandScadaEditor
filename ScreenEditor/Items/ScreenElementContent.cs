@@ -36,7 +36,7 @@ namespace ExpandScadaEditor.ScreenEditor.Items
 
         private void CreateEditableProperties()
         {
-            GroupOfProperties newGroup = new GroupOfProperties("ContentCommon", new ObservableCollection<ElementProperty>()
+            GroupOfProperties newGroup = new GroupOfProperties("ContentCommon", true, new ObservableCollection<ElementProperty>()
             {
                 ScreenElement.CreateEditableDependencyProperty<double>(nameof(Opacity), "Opacity", this, (val) =>
                 {

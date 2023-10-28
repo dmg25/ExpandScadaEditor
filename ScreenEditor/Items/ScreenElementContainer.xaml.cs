@@ -21,6 +21,7 @@ namespace ExpandScadaEditor.ScreenEditor.Items
     /// </summary>
     public partial class ScreenElementContainer : ScreenElement
     {
+
         public ScreenElementContainer(ScreenElementContent contentElement) 
             : base(contentElement)
         {
@@ -40,10 +41,6 @@ namespace ExpandScadaEditor.ScreenEditor.Items
             }
 
             RootContainer.Children.Insert(0, newItem);
-
-            //after UNDO/ REDO action clean properties window(check notification?)
-            // UNDO / REDO if it was replacing - do not drop selection - try to hold it(just update)
-            //   then finally move to saving method...
         }
     }
 }

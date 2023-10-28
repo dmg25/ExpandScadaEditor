@@ -8,29 +8,25 @@ using System.Threading.Tasks;
 using ExpandScadaEditor.ScreenEditor.Items;
 using System.Collections.ObjectModel;
 using System.Windows.Input;
+using System.Windows.Controls;
 using ExpandScadaEditor.ScreenEditor.Items.Catalog;
+using System.Windows.Markup;
+using System.Windows;
+using System.Reflection;
 
 namespace ExpandScadaEditor.ScreenEditor
 {
     public class VectorEditorVM : INotifyPropertyChanged
     {
-        /*  undo/redo
-         *      - Create class or service to contain user's actions
-         *          - class OperationsMemory
-         *          - contains Undo and Redo list/queue
-         *          - item is list of ScreenElements with all actual properties
-         *      - Create undo/redo methods
-         *          - undo 
-         *              - find all elements from undo index in workspace elements dictionary
-         *                and apply all properties (or just whole object, why not)
-         *              - if there is no element with this ID in dictionary - create and put on space
-         *          - redo - the same
-         *          - after UNdo list was used - take item and put in the redo list
-         *          - if undo list was filled witn new index from workspace - clean redo list
-         *      - Create 2 commands for undo and redo
-         *      - think out, how to add actions to queue
-         *          - just method "add user action"
+
+
+
+        /*      Loading
+         * 
+         * 
+         * 
          * */
+        public const string ROOT_CONTENT_KEY_NAME = "ElementToSave";
 
         public UndoRedoContainer UndoRedo = new UndoRedoContainer();
 
@@ -444,6 +440,24 @@ namespace ExpandScadaEditor.ScreenEditor
             }
         }
 
+        private Command saveScreen;
+        public Command SaveScreen
+        {
+            get
+            {
+                return saveScreen ??
+                    (saveScreen = new Command(obj =>
+                    {
+                        SaveScreenInXamlFile("dummy");
+
+                    },
+                    obj =>
+                    {
+                        return true;
+                    }));
+            }
+        }
+
         public VectorEditorVM()
         {
             
@@ -600,6 +614,104 @@ namespace ExpandScadaEditor.ScreenEditor
         //        pair.Value.ZoomCoef = zoomCoef;
         //    }
         //}
+
+
+        private void SaveScreenInXamlFile(string filePath)
+        {
+            /*      Saving
+         *      
+         *      - start build clone of current screen - create again without trash to read clear xaml for saving later
+         *          - create main canvas first - take all main properties manually - give a name to canvas
+         *              - later to canvas properties can be connected signals
+         *          - for each element on workspace 
+         *              - take content of container and recreate it again without container 
+         *              - try to add properties of content automatically - via copying or smth. If not - manually from list with groups
+         *              - take care about Z index !!! don't implemented yet - just copy canvas attached property???
+         *              - check name, if name is empty - generate with ID
+         *              - create node for attached signals - add to some list
+         *              - add created elemnt on canvas
+         *          - save canvas as xaml into string
+         *          - add special section with signals
+         *          - save to file
+         * */
+
+            // As a test first
+            Canvas workspace = new Canvas();
+            workspace.Width = 500;
+            workspace.Height = 500;
+
+            foreach (var pair in ElementsOnWorkSpace)
+            {
+                // TODO is it necessary to make a copy?
+                var type = pair.Value.GetType();
+                var container = (ScreenElement)Activator.CreateInstance(type, pair.Value.ElementContent);
+                container.InitializeFromAnotherElement(pair.Value);
+
+                var content = container.ElementContent;
+
+                // Set settings of container on content
+                // because of zooming we have to set position/size parameters manually
+
+                // get root of content 
+                var rootToSave = (FrameworkElement)content.FindName(ROOT_CONTENT_KEY_NAME);
+
+                content.Content = null;
+
+                var xamlCode1 = XamlWriter.Save(rootToSave);
+
+                Canvas.SetLeft(rootToSave, container.CoordX);
+                Canvas.SetTop(rootToSave, container.CoordY);
+
+                rootToSave.Width = container.Width;
+                rootToSave.Height = container.Height;
+
+                if (string.IsNullOrEmpty(container.Name))
+                {
+                    rootToSave.Name = $"Element_ID_{container.Id}";
+                }
+                else
+                {
+                    rootToSave.Name = container.Name;
+                }
+
+                // set personal settings of content
+
+                foreach (var propertyGroup in container.ElementPropertyGroups)
+                {
+                    if (propertyGroup.IsGroupForContent)
+                    {
+                        foreach (var property in propertyGroup.ElementProperties)
+                        {
+                            PropertyInfo propertyToSave = rootToSave.GetType().GetProperty(property.Name, BindingFlags.Public | BindingFlags.Instance);
+                            propertyToSave.SetValue(rootToSave, property.ValueObj);
+
+                            // TODO make it like this and write errors to log/user, but now we want to see any error
+                            //if (null != opacityProperty)
+                            //{
+                            //    opacityProperty.SetValue(rootToSave, 0.5);
+                            //}
+                        }
+                    }
+                }
+
+                workspace.Children.Add(rootToSave);
+            }
+
+            var xamlCode = XamlWriter.Save(workspace);
+
+            //continue with properties of workspace()
+            // with header/ format of saving file - check what is really required
+            // dont forget split on lines - use replacing
+            // add signals section
+            // save and check results
+
+            // add workspace properties editing
+            // create loading function
+
+
+
+        }
+
 
         public event PropertyChangedEventHandler PropertyChanged;
         public virtual void NotifyPropertyChanged([CallerMemberName] string propertyName = "")

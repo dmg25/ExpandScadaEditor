@@ -120,6 +120,7 @@
                     <SolidColorBrush Color="{DynamicResource {x:Static SystemColors.ControlColorKey}}"/>
                 </ToolBar.Background>
 
+                <Button Content="Save" Command="{Binding SaveScreen}" Focusable="False"/>
                 <Button Content="Undo" Command="{Binding Undo}" Focusable="False"/>
                 <Button Content="Redo" Command="{Binding Redo}" Focusable="False"/>
                 <Button Content="Del" Command="{Binding Delete}" Focusable="False"/>

@@ -13,6 +13,8 @@ namespace ExpandScadaEditor.ScreenEditor.Items.Properties
     {
         public string GroupTitle { get; set; }
 
+        public bool IsGroupForContent { get; private set; }
+
         private ObservableCollection<ElementProperty> elementProperties = new ObservableCollection<ElementProperty>();
         public ObservableCollection<ElementProperty> ElementProperties
         {
@@ -26,10 +28,11 @@ namespace ExpandScadaEditor.ScreenEditor.Items.Properties
             }
         }
 
-        public GroupOfProperties(string title, ObservableCollection<ElementProperty> properties)
+        public GroupOfProperties(string title, bool isGroupForContent, ObservableCollection<ElementProperty> properties)
         {
             GroupTitle = title;
             ElementProperties = properties;
+            IsGroupForContent = isGroupForContent;
         }
     }
 }
