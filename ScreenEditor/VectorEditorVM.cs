@@ -527,6 +527,15 @@ namespace ExpandScadaEditor.ScreenEditor
                 element.ParametersChangedByUser += Element_ParametersChangedByUser;
                 ElementsOnWorkSpace.Remove(element.Id);
                 ElementsOnWorkSpace.Add(element.Id, element);
+
+                // update selected element
+                var selectedElementIndex = SelectedElements.IndexOf(oldElement);
+                if (selectedElementIndex >= 0)
+                {
+                    SelectedElements[selectedElementIndex] = element;
+                    element.ShowResizeBorder();
+                }
+
                 ScreenElementReplaced(null, new ReplacingElementEventArgs() { OldElement = oldElement, NewElement = element });
             }
             else
