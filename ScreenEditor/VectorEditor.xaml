@@ -176,7 +176,21 @@
               Focusable="False"/>
 
 
-        <ListView Grid.Column="4" Grid.Row="1" ItemsSource="{Binding SelectedElements[0].ElementPropertyGroups}" HorizontalAlignment="Left">
+        <ListView Grid.Column="4" Grid.Row="1"  HorizontalAlignment="Left">
+            <ListView.Style>
+                <Style TargetType="{x:Type ListView}" 
+                >
+                    <Setter Property="BorderThickness"  Value="1" />
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding IsWorkspaceSelected}" Value="False">
+                            <Setter Property="ItemsSource"  Value="{Binding SelectedElements[0].ElementPropertyGroups}" />
+                        </DataTrigger>
+                        <DataTrigger Binding="{Binding IsWorkspaceSelected}" Value="True">
+                            <Setter Property="ItemsSource" Value="{Binding Workspace.ElementPropertyGroups}"/>
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </ListView.Style>
             <ListView.View >
                 <GridView ColumnHeaderContainerStyle="{StaticResource NoHeaderPlease}" ><!--ColumnHeaderContainerStyle="{StaticResource NoHeaderPlease}"-->
                     <GridViewColumn  Header="Parameters" CellTemplate="{StaticResource ParametersGroup}" />

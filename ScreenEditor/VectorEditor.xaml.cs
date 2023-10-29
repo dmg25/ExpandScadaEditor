@@ -335,7 +335,7 @@ namespace ExpandScadaEditor.ScreenEditor
             
 
             WorkSpace.Initialize(VM, WSScroller);
-            VM.Initialize();
+            VM.Initialize(WorkSpace);
 
             WorkSpace.Width = 500;
             WorkSpace.Height = 500;

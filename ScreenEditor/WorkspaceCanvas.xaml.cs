@@ -12,16 +12,20 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using System.ComponentModel;
+using System.Runtime.CompilerServices;
 using ExpandScadaEditor.ScreenEditor.WorkspaceHelperControls;
 using ExpandScadaEditor.ScreenEditor.Items;
 using System.Collections.ObjectModel;
+using System.Reflection;
+using ExpandScadaEditor.ScreenEditor.Items.Properties;
 
 namespace ExpandScadaEditor.ScreenEditor
 {
     /// <summary>
     /// Логика взаимодействия для WorkspaceCanvas.xaml
     /// </summary>
-    public partial class WorkspaceCanvas : Canvas
+    public partial class WorkspaceCanvas : Canvas, INotifyPropertyChanged
     {
         const string SELECTING_RECTANGLE = "SELECTING_RECTANGLE";
 
@@ -42,9 +46,21 @@ namespace ExpandScadaEditor.ScreenEditor
         ScreenElement elementFromCatalog;
         //ScreenElement tmpElementFromCatalog;
         bool elementFromCatalogMoved = false;
+        Point tmpMouseCoordinates = new Point();
 
 
-
+        private ObservableCollection<GroupOfProperties> elementPropertyGroups = new ObservableCollection<GroupOfProperties>();
+        public ObservableCollection<GroupOfProperties> ElementPropertyGroups
+        {
+            get
+            {
+                return elementPropertyGroups;
+            }
+            set
+            {
+                elementPropertyGroups = value;
+            }
+        }
 
 
         // Parental variables - must be initialized with editor
@@ -122,7 +138,7 @@ namespace ExpandScadaEditor.ScreenEditor
                 }
 
 
-                //NotifyPropertyChanged();
+                OnPropertyChanged();
             }
         }
 
@@ -141,7 +157,7 @@ namespace ExpandScadaEditor.ScreenEditor
                 {
                     pairs.Value.WorkspaceHeight = value;
                 }
-                //NotifyPropertyChanged();
+                OnPropertyChanged();
             }
         }
 
@@ -156,6 +172,16 @@ namespace ExpandScadaEditor.ScreenEditor
 
         internal void Initialize(VectorEditorVM vm, ScrollViewer parentalScrollViewer)
         {
+            GroupOfProperties newGroup = new GroupOfProperties("Common", false, new ObservableCollection<ElementProperty>()
+            {
+                CreateEditableProperty<double>(nameof(Height), "Height in px", ScreenElement.PositiveDoubleValidation),
+                CreateEditableProperty<double>(nameof(Width), "Width in px" , ScreenElement.PositiveDoubleValidation),
+            });
+
+            ElementPropertyGroups.Add(newGroup);
+
+
+
             VM = vm;
             ParentalScroller = parentalScrollViewer;
 
@@ -257,6 +283,12 @@ namespace ExpandScadaEditor.ScreenEditor
                 this.Children.Remove(borderSelecting);
                 borderSelecting = null;
             }
+
+            // Check if there was no moving - show cnavas properties
+            var mousePosition = WorkspaceCanvas.UnzoomCoordinates(e.GetPosition(this), ZoomCoef);
+
+            VM.IsWorkspaceSelected = VM.SelectedElements.Count == 0 && mousePosition.X == tmpMouseCoordinates.X && mousePosition.Y == tmpMouseCoordinates.Y;
+
             this.ReleaseMouseCapture();
         }
 
@@ -265,11 +297,15 @@ namespace ExpandScadaEditor.ScreenEditor
             // Here is a logic for Canvas event only. If we clicked on any element - igrore this event
             if (e.OriginalSource is not Canvas)
             {
+                VM.IsWorkspaceSelected = false;
                 return;
             }
 
             // start of selecting by mouse
             var mousePosition = WorkspaceCanvas.UnzoomCoordinates(e.GetPosition(this), ZoomCoef);
+
+            // save coordinates to check if position was changed after mouse up
+            tmpMouseCoordinates = mousePosition;
 
             // drop all selected elements if there were before
             DeselectAllElements();
@@ -873,6 +909,48 @@ namespace ExpandScadaEditor.ScreenEditor
 
 
 
+        public ElementProperty<T> CreateEditableProperty<T>(
+            string propertyName,
+            string description,
+            //ScreenElement elementWithProperties,
+            Func<T, string> validation = null,
+            bool canConnectSignal = false,
+            bool editable = true,
+            string customName = null
+            )
+        {
+            ElementProperty<T> newProperty = new ElementProperty<T>(
+                customName is null ? propertyName : customName,
+                description,
+                validation,
+                canConnectSignal,
+                editable);
+
+            // Events
+            // This event invokes only if value was changed - to avoid stackoverflow
+            newProperty.PropertyChangedNotEqual += (sender, e) =>
+            {
+                if (e.PropertyName == "Value")
+                {
+                    this.GetType().GetProperty(propertyName).SetValue(this, ((ElementProperty<T>)sender).Value);
+                }
+            };
+
+            this.PropertyChanged += (sender, e) =>
+            {
+                if (e.PropertyName == propertyName)
+                {
+                    newProperty.Value = (T)sender.GetType().GetProperty(propertyName).GetValue(sender, null);
+                }
+            };
+
+            // set on element 
+
+            //ElementProperties.Add(newProperty);
+            return newProperty;
+
+        }
+
         public static Point UnzoomCoordinates(Point zoomedCoordinates, double zoomCoef)
         {
             return new Point(zoomedCoordinates.X / zoomCoef, zoomedCoordinates.Y / zoomCoef);
@@ -883,7 +961,11 @@ namespace ExpandScadaEditor.ScreenEditor
             return new Point(zoomedCoordinates.X * zoomCoef, zoomedCoordinates.Y * zoomCoef);
         }
 
-
+        public event PropertyChangedEventHandler PropertyChanged;
+        public void OnPropertyChanged([CallerMemberName] string prop = "")
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(prop));
+        }
 
     }
 }

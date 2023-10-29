@@ -70,7 +70,7 @@ namespace ExpandScadaEditor.ScreenEditor.Items
         public const string COVER_BORDER_NAME = "COVER_BORDER";
         public const string MOVING_BORDER_NAME = "MOVING_BORDER";
 
-        public static Func<double, string> positiveDoubleValidation = delegate (double val)
+        public static Func<double, string> PositiveDoubleValidation = delegate (double val)
         {
             if (val < 0)
                 return "Must be positive";
@@ -785,8 +785,7 @@ namespace ExpandScadaEditor.ScreenEditor.Items
             };
 
             // set on element 
-           
-
+          
             //ElementProperties.Add(newProperty);
             return newProperty;
 
@@ -854,8 +853,8 @@ namespace ExpandScadaEditor.ScreenEditor.Items
 
             newGroup = new GroupOfProperties("Layout", false, new ObservableCollection<ElementProperty>()
             {
-                ScreenElement.CreateEditableProperty<double>(nameof(Height), "Height in px", this, positiveDoubleValidation),
-                ScreenElement.CreateEditableProperty<double>(nameof(Width), "Width in px", this, positiveDoubleValidation),
+                ScreenElement.CreateEditableProperty<double>(nameof(Height), "Height in px", this, PositiveDoubleValidation),
+                ScreenElement.CreateEditableProperty<double>(nameof(Width), "Width in px", this, PositiveDoubleValidation),
                 ScreenElement.CreateEditableProperty<double>(nameof(CoordX), "Coordinate X", this, customName: "X", canConnectSignal: true),
                 ScreenElement.CreateEditableProperty<double>(nameof(CoordY), "Coordinate Y", this, customName: "Y", canConnectSignal: true),
             });

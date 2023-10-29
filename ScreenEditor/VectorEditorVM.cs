@@ -52,6 +52,36 @@ namespace ExpandScadaEditor.ScreenEditor
             }
         }
 
+        private WorkspaceCanvas workspace;
+        public WorkspaceCanvas Workspace
+        {
+            get
+            {
+                return workspace;
+            }
+            set
+            {
+                workspace = value;
+                NotifyPropertyChanged();
+            }
+        }
+
+        
+
+        private bool isWorkspaceSelected;
+        public bool IsWorkspaceSelected
+        {
+            get
+            {
+                return isWorkspaceSelected;
+            }
+            set
+            {
+                isWorkspaceSelected = value;
+                NotifyPropertyChanged();
+            }
+        }
+
         //internal Dictionary<int, ScreenElement> SelectedElements = new Dictionary<int, ScreenElement>();
         internal ObservableCollection<ScreenElement> CopyPasteBuffer = new ObservableCollection<ScreenElement>();
 
@@ -449,7 +479,6 @@ namespace ExpandScadaEditor.ScreenEditor
                     (saveScreen = new Command(obj =>
                     {
                         SaveScreenInXamlFile("dummy");
-
                     },
                     obj =>
                     {
@@ -463,8 +492,10 @@ namespace ExpandScadaEditor.ScreenEditor
             
         }
 
-        public void Initialize()
+        public void Initialize(WorkspaceCanvas workspace)
         {
+
+            Workspace = workspace;
             //Items.Add(new TestItem2() { CatalogMode = true, Id = -111});
             //Items.Add(new TestItem2() { CatalogMode = true, Id = -222 });
 
@@ -637,8 +668,16 @@ namespace ExpandScadaEditor.ScreenEditor
 
             // As a test first
             Canvas workspace = new Canvas();
-            workspace.Width = 500;
-            workspace.Height = 500;
+
+            // set personal settings of workspace
+            foreach (var propertyGroup in Workspace.ElementPropertyGroups)
+            {
+                foreach (var property in propertyGroup.ElementProperties)
+                {
+                    PropertyInfo propertyToSave = workspace.GetType().GetProperty(property.Name, BindingFlags.Public | BindingFlags.Instance);
+                    propertyToSave.SetValue(workspace, property.ValueObj);
+                }
+            }
 
             foreach (var pair in ElementsOnWorkSpace)
             {
@@ -699,7 +738,6 @@ namespace ExpandScadaEditor.ScreenEditor
 
             var xamlCode = XamlWriter.Save(workspace);
 
-            //continue with properties of workspace()
             // with header/ format of saving file - check what is really required
             // dont forget split on lines - use replacing
             // add signals section
