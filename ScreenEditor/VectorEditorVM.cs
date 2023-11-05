@@ -13,6 +13,8 @@ using ExpandScadaEditor.ScreenEditor.Items.Catalog;
 using System.Windows.Markup;
 using System.Windows;
 using System.Reflection;
+using System.IO;
+using Microsoft.Win32;
 
 namespace ExpandScadaEditor.ScreenEditor
 {
@@ -478,7 +480,15 @@ namespace ExpandScadaEditor.ScreenEditor
                 return saveScreen ??
                     (saveScreen = new Command(obj =>
                     {
-                        SaveScreenInXamlFile("dummy");
+                        SaveFileDialog saveFileDialog = new SaveFileDialog();
+                        saveFileDialog.Filter = "Xaml file (.*xaml)|*.xaml";
+                        if (saveFileDialog.ShowDialog() == true)
+                        {
+                            SaveScreenInXamlFile(saveFileDialog.FileName);
+                        }
+                            
+
+                        
                     },
                     obj =>
                     {
@@ -738,15 +748,17 @@ namespace ExpandScadaEditor.ScreenEditor
 
             var xamlCode = XamlWriter.Save(workspace);
 
-            // with header/ format of saving file - check what is really required
-            // dont forget split on lines - use replacing
-            // add signals section
-            // save and check results
+            List<string> outputLines = new List<string>();
+            outputLines.Add(xamlCode);
+            outputLines.Add("<EditorBlockForConnections>");
+            outputLines.Add("</EditorBlockForConnections>");
 
-            // add workspace properties editing
-            // create loading function
+            using (StreamWriter outputFile = new StreamWriter(filePath))
+            {
 
-
+                foreach (string line in outputLines)
+                    outputFile.WriteLine(line);
+            }
 
         }
 
