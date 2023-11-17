@@ -754,7 +754,8 @@ namespace ExpandScadaEditor.ScreenEditor.Items
             Func<T, string> validation = null,
             bool canConnectSignal = false,
             bool editable = true,
-            string customName = null
+            string customName = null,
+            string propertyNameForXml = null
             )
         {
             var propertyInfo = elementWithProperties.GetType().GetProperty(propertyName);
@@ -764,7 +765,8 @@ namespace ExpandScadaEditor.ScreenEditor.Items
                 description,
                 validation,
                 canConnectSignal,
-                editable);
+                editable,
+                propertyNameForXml);
 
             // Events
             // This event invokes only if value was changed - to avoid stackoverflow
@@ -803,7 +805,8 @@ namespace ExpandScadaEditor.ScreenEditor.Items
             Func<T, string> validation = null,
             bool canConnectSignal = false,
             bool editable = true,
-            string customName = null
+            string customName = null,
+            string propertyNameForXml = null
             )
         {
 
@@ -814,7 +817,8 @@ namespace ExpandScadaEditor.ScreenEditor.Items
                 (T)notifier.Value,
                 validation,
                 canConnectSignal,
-                editable);
+                editable,
+                propertyNameForXml);
 
             //newProperty.ElementDependancyObject = elementDependancyObject;
 
@@ -855,8 +859,8 @@ namespace ExpandScadaEditor.ScreenEditor.Items
             {
                 ScreenElement.CreateEditableProperty<double>(nameof(Height), "Height in px", this, PositiveDoubleValidation),
                 ScreenElement.CreateEditableProperty<double>(nameof(Width), "Width in px", this, PositiveDoubleValidation),
-                ScreenElement.CreateEditableProperty<double>(nameof(CoordX), "Coordinate X", this, customName: "X", canConnectSignal: true),
-                ScreenElement.CreateEditableProperty<double>(nameof(CoordY), "Coordinate Y", this, customName: "Y", canConnectSignal: true),
+                ScreenElement.CreateEditableProperty<double>(nameof(CoordX), "Coordinate X", this, customName: "X", canConnectSignal: true, propertyNameForXml: "Canvas.Left"),
+                ScreenElement.CreateEditableProperty<double>(nameof(CoordY), "Coordinate Y", this, customName: "Y", canConnectSignal: true, propertyNameForXml: "Canvas.Top"),
             });
 
             ElementPropertyGroups.Add(newGroup);

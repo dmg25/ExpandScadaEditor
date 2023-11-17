@@ -21,7 +21,9 @@
         </Grid.RowDefinitions>
 
         <TextBlock Text="{Binding Property.Name}"/>
+        <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding SignalName}"/>
+        <TextBox Grid.Row="1" Grid.Column="0" Text="{Binding ID}"/>
 
-        <Button Grid.Column="1" Command="{Binding CreateSignal}" Content="Create dummy signal" />
+        <Button Grid.Column="1" Command="{Binding CreateSignal}" Content="Create your signal" />
     </Grid>
 </Window>

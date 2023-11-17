@@ -15,6 +15,8 @@ using System.Windows;
 using System.Reflection;
 using System.IO;
 using Microsoft.Win32;
+using System.Xml;
+using System.Xml.Linq;
 
 namespace ExpandScadaEditor.ScreenEditor
 {
@@ -714,17 +716,9 @@ namespace ExpandScadaEditor.ScreenEditor
                 rootToSave.Width = container.Width;
                 rootToSave.Height = container.Height;
 
-                if (string.IsNullOrEmpty(container.Name))
-                {
-                    rootToSave.Name = $"Element_ID_{container.Id}";
-                }
-                else
-                {
-                    rootToSave.Name = container.Name;
-                }
+                rootToSave.Name = GetNameOfContainer(pair.Value);
 
                 // set personal settings of content
-
                 foreach (var propertyGroup in container.ElementPropertyGroups)
                 {
                     if (propertyGroup.IsGroupForContent)
@@ -750,15 +744,179 @@ namespace ExpandScadaEditor.ScreenEditor
 
             List<string> outputLines = new List<string>();
             outputLines.Add(xamlCode);
-            outputLines.Add("<EditorBlockForConnections>");
-            outputLines.Add("</EditorBlockForConnections>");
+            outputLines.Add(GenerateBlockForConnections());
 
             using (StreamWriter outputFile = new StreamWriter(filePath))
             {
-
                 foreach (string line in outputLines)
+                {
                     outputFile.WriteLine(line);
+                }
             }
+
+        }
+
+        private string GetNameOfContainer(ScreenElement container)
+        {
+            if (string.IsNullOrEmpty(container.Name))
+            {
+                return $"Element_ID_{container.Id}";
+            }
+            else
+            {
+                return container.Name;
+            }
+        }
+
+        private string GenerateBlockForConnections()
+        {
+            XDocument xDoc = new XDocument();
+            XElement rootBlock = new XElement("EditorBlockForConnections");
+
+            foreach (var screenElement in ElementsOnWorkSpace.Values)
+            {
+                foreach (var group in screenElement.ElementPropertyGroups)
+                {
+                    foreach (var property in group.ElementProperties)
+                    {
+                        if (property.IsSignalAttached)
+                        {
+                            
+                            // get tmp or not tmp name from saved elements
+                            var elementName = GetNameOfContainer(screenElement);
+                            rootBlock.Add(new XElement("Binding",
+                               new XAttribute("UiName", elementName),
+                               new XAttribute("PropertyName", property.PropertyNameForXml is not null ? property.PropertyNameForXml : property.Name),
+                               new XAttribute("SignalName", property.ConnectedSignal.name)));
+                        }
+                    }
+                }
+            }
+
+            // TODO fix this
+            // Repair for reading view
+            if (!rootBlock.HasElements)
+            {
+                rootBlock.SetValue("\n");
+            }
+
+            xDoc.Add(rootBlock);
+            return xDoc.ToString();
+
+            //check names of REAL properties, not container properties.
+            // If i connect signal to X/ Y properties - scada can not find this property
+            //  have to be Top / Left setting on element instead of using X/ Y
+            // for other same properties do the same
+
+        }
+
+        private void LoadScreenFromXamlFile(string filePath)
+        {
+            /*      Loading
+                - use almost the same method as in scata itself - get root element (canvas) with all props
+                - find canvas root by name and go through each child
+                    - check if we have registered element type for this firse (create dictionary before)
+                        - if not - error of loading - message - stop (open emty canvas ready for actions)
+                    - if found - create this element from dictionary and initialize all properties from loaded element
+                    - put this element to the container (should be done first probably)
+                    - add element to workspace
+                - check special section and add all connected signals to certain properties
+                - after done - call basic action undo/redo
+
+             */
+
+
+
+
+
+
+
+
+
+
+            //// As a test first
+            //Canvas workspace = new Canvas();
+
+            //// set personal settings of workspace
+            //foreach (var propertyGroup in Workspace.ElementPropertyGroups)
+            //{
+            //    foreach (var property in propertyGroup.ElementProperties)
+            //    {
+            //        PropertyInfo propertyToSave = workspace.GetType().GetProperty(property.Name, BindingFlags.Public | BindingFlags.Instance);
+            //        propertyToSave.SetValue(workspace, property.ValueObj);
+            //    }
+            //}
+
+            //foreach (var pair in ElementsOnWorkSpace)
+            //{
+            //    // TODO is it necessary to make a copy?
+            //    var type = pair.Value.GetType();
+            //    var container = (ScreenElement)Activator.CreateInstance(type, pair.Value.ElementContent);
+            //    container.InitializeFromAnotherElement(pair.Value);
+
+            //    var content = container.ElementContent;
+
+            //    // Set settings of container on content
+            //    // because of zooming we have to set position/size parameters manually
+
+            //    // get root of content 
+            //    var rootToSave = (FrameworkElement)content.FindName(ROOT_CONTENT_KEY_NAME);
+
+            //    content.Content = null;
+
+            //    var xamlCode1 = XamlWriter.Save(rootToSave);
+
+            //    Canvas.SetLeft(rootToSave, container.CoordX);
+            //    Canvas.SetTop(rootToSave, container.CoordY);
+
+            //    rootToSave.Width = container.Width;
+            //    rootToSave.Height = container.Height;
+
+            //    if (string.IsNullOrEmpty(container.Name))
+            //    {
+            //        rootToSave.Name = $"Element_ID_{container.Id}";
+            //    }
+            //    else
+            //    {
+            //        rootToSave.Name = container.Name;
+            //    }
+
+            //    // set personal settings of content
+
+            //    foreach (var propertyGroup in container.ElementPropertyGroups)
+            //    {
+            //        if (propertyGroup.IsGroupForContent)
+            //        {
+            //            foreach (var property in propertyGroup.ElementProperties)
+            //            {
+            //                PropertyInfo propertyToSave = rootToSave.GetType().GetProperty(property.Name, BindingFlags.Public | BindingFlags.Instance);
+            //                propertyToSave.SetValue(rootToSave, property.ValueObj);
+
+            //                // TODO make it like this and write errors to log/user, but now we want to see any error
+            //                //if (null != opacityProperty)
+            //                //{
+            //                //    opacityProperty.SetValue(rootToSave, 0.5);
+            //                //}
+            //            }
+            //        }
+            //    }
+
+            //    workspace.Children.Add(rootToSave);
+            //}
+
+            //var xamlCode = XamlWriter.Save(workspace);
+
+            //List<string> outputLines = new List<string>();
+            //outputLines.Add(xamlCode);
+            //outputLines.Add("<EditorBlockForConnections>");
+            //outputLines.Add("</EditorBlockForConnections>");
+
+            //using (StreamWriter outputFile = new StreamWriter(filePath))
+            //{
+
+            //    foreach (string line in outputLines)
+            //        outputFile.WriteLine(line);
+            //}
 
         }
 

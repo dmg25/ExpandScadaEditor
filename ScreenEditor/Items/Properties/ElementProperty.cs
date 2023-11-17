@@ -55,6 +55,7 @@ namespace ExpandScadaEditor.ScreenEditor.Items.Properties
         public virtual bool IsSignalAttached { get; set; }
         public bool Editable { get; set; }
         public bool IsDependancyConnected { get; set; }
+        public string PropertyNameForXml { get; set; }
         //public DependencyObject ElementDependancyObject { get; set; } = null;
         public virtual event EventHandler ParameterChangedByUser;
 
@@ -230,13 +231,15 @@ namespace ExpandScadaEditor.ScreenEditor.Items.Properties
             string description, 
             Func<T, string> validation = null,
             bool canConnectSignal = false, 
-            bool editable = true)
+            bool editable = true,
+            string propertyNameForXml = null)
         {
             Name = name;
             Description = description;
             this.validation = validation;
             CanConnectSignal = canConnectSignal;
             Editable = editable;
+            PropertyNameForXml = propertyNameForXml;
         }
 
         public ElementProperty(string name,
@@ -244,8 +247,9 @@ namespace ExpandScadaEditor.ScreenEditor.Items.Properties
             T initialValue, 
             Func<T, string> validation = null,
             bool canConnectSignal = false,
-            bool editable = true)
-            : this (name, description, validation, canConnectSignal, editable)
+            bool editable = true,
+            string propertyNameForXml = null)
+            : this (name, description, validation, canConnectSignal, editable, propertyNameForXml)
         {
             _value = initialValue;
             OnPropertyChanged(nameof(Value));

@@ -26,6 +26,34 @@ namespace ExpandScadaEditor.ScreenEditor.Items.Properties
             }
         }
 
+        private string signalName;
+        public string SignalName
+        {
+            get
+            {
+                return signalName;
+            }
+            set
+            {
+                signalName = value;
+                NotifyPropertyChanged();
+            }
+        }
+
+        private int id;
+        public int ID
+        {
+            get
+            {
+                return id;
+            }
+            set
+            {
+                id = value;
+                NotifyPropertyChanged();
+            }
+        }
+
         public void Initialize(ElementProperty property)
         {
             Property = property;
@@ -39,7 +67,10 @@ namespace ExpandScadaEditor.ScreenEditor.Items.Properties
                 return _createSignal ??
                     (_createSignal = new Command(obj =>
                     {
-                        Property.ConnectedSignal = new Signal<int>(8888, "Dummy", "Stupid test");
+                        var signal = new Signal<int>();
+                        signal.id = ID;
+                        signal.name = SignalName;
+                        Property.ConnectedSignal = signal;
                     },
                     obj =>
                     {
