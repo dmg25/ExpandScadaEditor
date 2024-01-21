@@ -32,7 +32,7 @@ namespace ExpandScadaEditor.ScreenEditor
 
         List<(int id, double xCoord, double yCoord)> selectedPositionsBeforeMoving = new List<(int id, double xCoord, double yCoord)>();
         MouseMovingMode preMode = MouseMovingMode.None;
-        ScreenElement tmpPreSelectedElement = new ScreenElement(new ScreenElementContent()); // TODO ??? was drunk ???
+        ScreenElement tmpPreSelectedElement = new ScreenElement(new ScreenElementContent("unknown")); // TODO ??? was drunk ???
         int selectedElementIndexByMouse = -1;
         internal ObservableCollection<ScreenElement> TmpFollowerElements = new ObservableCollection<ScreenElement>();
 
@@ -168,10 +168,6 @@ namespace ExpandScadaEditor.ScreenEditor
 
             this.MouseMove += WorkSpace_MouseMove;
 
-        }
-
-        internal void Initialize(VectorEditorVM vm, ScrollViewer parentalScrollViewer)
-        {
             GroupOfProperties newGroup = new GroupOfProperties("Common", false, new ObservableCollection<ElementProperty>()
             {
                 CreateEditableProperty<double>(nameof(Height), "Height in px", ScreenElement.PositiveDoubleValidation),
@@ -179,6 +175,18 @@ namespace ExpandScadaEditor.ScreenEditor
             });
 
             ElementPropertyGroups.Add(newGroup);
+
+        }
+
+        internal void Initialize(VectorEditorVM vm, ScrollViewer parentalScrollViewer)
+        {
+            //GroupOfProperties newGroup = new GroupOfProperties("Common", false, new ObservableCollection<ElementProperty>()
+            //{
+            //    CreateEditableProperty<double>(nameof(Height), "Height in px", ScreenElement.PositiveDoubleValidation),
+            //    CreateEditableProperty<double>(nameof(Width), "Width in px" , ScreenElement.PositiveDoubleValidation),
+            //});
+
+            //ElementPropertyGroups.Add(newGroup);
 
 
 
@@ -201,6 +209,24 @@ namespace ExpandScadaEditor.ScreenEditor
                 pairs.Value.Width = Width;
                 pairs.Value.Height = Height;
             }
+        }
+
+        internal void Deinitialize()
+        {
+            
+
+            VM.NewScreenElementAdded -= VM_NewScreenElementAdded;
+            VM.ScreenElementReplaced -= VM_ScreenElementReplaced;
+            VM.ScreenElementDeleted -= VM_ScreenElementDeleted;
+            VM.SelectedElementsDeleted -= VM_SelectedElementsDeleted;
+            VM.SelectTheseElements -= VM_SelectTheseElements;
+            VM.ZoomChanged -= VM_ZoomChanged;
+
+            VM = null;
+            ParentalScroller = null;
+
+            MouseLeftButtonDown -= WorkSpace_MouseLeftButtonDown;
+            MouseLeftButtonUp -= WorkSpace_MouseLeftButtonUp;
         }
 
         private void VM_ZoomChanged(object sender, EventArgs e)

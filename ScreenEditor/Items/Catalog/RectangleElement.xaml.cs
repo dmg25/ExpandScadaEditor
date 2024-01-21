@@ -20,7 +20,7 @@ namespace ExpandScadaEditor.ScreenEditor.Items.Catalog
     /// </summary>
     public partial class RectangleElement : ScreenElementContent
     {
-        public RectangleElement(): base()
+        public RectangleElement(): base(nameof(RectangleElement))
         {
             InitializeComponent();
         }

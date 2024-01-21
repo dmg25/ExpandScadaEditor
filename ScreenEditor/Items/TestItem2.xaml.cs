@@ -20,7 +20,7 @@ namespace ExpandScadaEditor.ScreenEditor.Items
     /// </summary>
     public partial class TestItem2 : ScreenElementContent
     {
-        public TestItem2() : base()
+        public TestItem2() : base(nameof(TestItem2))
         {
             InitializeComponent();
         }

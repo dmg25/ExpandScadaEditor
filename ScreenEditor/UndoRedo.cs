@@ -36,6 +36,12 @@ namespace ExpandScadaEditor.ScreenEditor
             return RedoCollection.Count > 0;
         }
 
+        public void DropAllActions()
+        {
+            UndoCollection = new Stack<(List<ScreenElement> elements, UndoRedoActionType actionType)>();
+            RedoCollection = new Stack<(List<ScreenElement> elements, UndoRedoActionType actionType)>();
+        }
+
         public void BasicUserAction(List<ScreenElement> initElements)
         {
             List<ScreenElement> clonedElements = new List<ScreenElement>();

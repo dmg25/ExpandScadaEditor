@@ -27,6 +27,8 @@ namespace ExpandScadaEditor.ScreenEditor.Items
         {
             InitializeComponent();
 
+            // We have to create new instance here, because otherwise we cannot add it to rootGrid... 
+            // TODO find out something better....
             var newItem = (ScreenElementContent)Activator.CreateInstance(contentElement.GetType());
 
             foreach (var group in newItem.ElementPropertyGroups)

@@ -40,8 +40,9 @@ namespace ExpandScadaEditor.ScreenEditor
         public event EventHandler<ReplacingElementEventArgs> ScreenElementReplaced;
         public event EventHandler<ScreenElementsEventArgs> SelectTheseElements;
         public event EventHandler ZoomChanged;
+        public event EventHandler WorkspaceChanged;
 
-         
+
         private ObservableCollection<ScreenElement> selectedElements = new ObservableCollection<ScreenElement>();
         public ObservableCollection<ScreenElement> SelectedElements
         {
@@ -499,6 +500,31 @@ namespace ExpandScadaEditor.ScreenEditor
             }
         }
 
+        private Command loadScreen;
+        public Command LoadScreen
+        {
+            get
+            {
+                return loadScreen ??
+                    (loadScreen = new Command(obj =>
+                    {
+                        OpenFileDialog openFileDialog = new OpenFileDialog();
+                        openFileDialog.Filter = "Xaml file (.*xaml)|*.xaml";
+                        if (openFileDialog.ShowDialog() == true)
+                        {
+                            LoadScreenFromXamlFile2(openFileDialog.FileName);
+                        }
+
+
+
+                    },
+                    obj =>
+                    {
+                        return true;
+                    }));
+            }
+        }
+
         public VectorEditorVM()
         {
             
@@ -704,8 +730,8 @@ namespace ExpandScadaEditor.ScreenEditor
                 // because of zooming we have to set position/size parameters manually
 
                 // get root of content 
-                var rootToSave = (FrameworkElement)content.FindName(ROOT_CONTENT_KEY_NAME);
-
+                var rr = (FrameworkElement)content.FindName(ROOT_CONTENT_KEY_NAME);
+                var rootToSave = XamlClone(rr);
                 content.Content = null;
 
                 var xamlCode1 = XamlWriter.Save(rootToSave);
@@ -717,6 +743,9 @@ namespace ExpandScadaEditor.ScreenEditor
                 rootToSave.Height = container.Height;
 
                 rootToSave.Name = GetNameOfContainer(pair.Value);
+
+                // This must be identificator of the type of element, for loading to editor back
+                rootToSave.Tag = pair.Value.ElementContent.Tag;
 
                 // set personal settings of content
                 foreach (var propertyGroup in container.ElementPropertyGroups)
@@ -754,6 +783,26 @@ namespace ExpandScadaEditor.ScreenEditor
                 }
             }
 
+        }
+
+        private static T XamlClone<T>(T original)
+            where T : class
+        {
+            if (original == null)
+                return null;
+
+            object clone;
+            using (var stream = new MemoryStream())
+            {
+                XamlWriter.Save(original, stream);
+                stream.Seek(0, SeekOrigin.Begin);
+                clone = XamlReader.Load(stream);
+            }
+
+            if (clone is T)
+                return (T)clone;
+            else
+                return null;
         }
 
         private string GetNameOfContainer(ScreenElement container)
@@ -802,15 +851,117 @@ namespace ExpandScadaEditor.ScreenEditor
 
             xDoc.Add(rootBlock);
             return xDoc.ToString();
-
-            //check names of REAL properties, not container properties.
-            // If i connect signal to X/ Y properties - scada can not find this property
-            //  have to be Top / Left setting on element instead of using X/ Y
-            // for other same properties do the same
-
         }
 
-        private void LoadScreenFromXamlFile(string filePath)
+        //// TODO move part to Common dll and in Scada too
+        //private void LoadScreenFromXamlFile(string filePath)
+        //{
+        //    /*      Loading
+        //        - use almost the same method as in scata itself - get root element (canvas) with all props
+        //        - find canvas root by name and go through each child
+        //            - check if we have registered element type for this firse (create dictionary before)
+        //                - if not - error of loading - message - stop (open emty canvas ready for actions)
+        //            - if found - create this element from dictionary and initialize all properties from loaded element
+        //            - put this element to the container (should be done first probably)
+        //            - add element to workspace
+        //        - check special section and add all connected signals to certain properties
+        //        - after done - call basic action undo/redo
+
+        //     */
+
+        //    // get canvas from xaml
+        //    // get special settings of canvas from element and set them for created canvas
+        //    // go through children
+        //    // check Tag of each 
+        //    //      - if matched with any of elenemts type from catalog list - create a container with this element included
+        //    //      - check each group and each setting
+        //    //      - if group is container-group - find these settings in element and set on container
+        //    //      - if group is not container - find settings values in element and set in content
+        //    //      - add element to canvas
+
+
+
+
+
+
+
+
+
+        //    SelectedElements = new ObservableCollection<ScreenElement>();
+        //    ElementsOnWorkSpace = new Dictionary<int, ScreenElement>();
+        //    Workspace.Deinitialize();
+
+        //    string wholeFile = File.ReadAllText(filePath);
+        //    string[] lines = wholeFile.Split("\n");
+
+        //    // remove all empty strings
+        //    List<string> allLinesCleaned = new List<string>();
+        //    foreach (var line in lines)
+        //    {
+        //        if (!string.IsNullOrWhiteSpace(line))
+        //        {
+        //            allLinesCleaned.Add(line.TrimEnd('\r'));
+        //        }
+        //    }
+
+        //    // get special section
+        //    var specislSectionResult = GetSpecialSection(allLinesCleaned);
+
+        //    // get root canvas 
+        //    Canvas rootCanvas = GetRootCanvasFromXaml(allLinesCleaned, specislSectionResult.startOfSpecialSectionLine);
+
+        //    // Create Workspace and set properties from read rootCanvas
+        //    WorkspaceCanvas workspace = new WorkspaceCanvas();
+        //    Workspace = workspace;
+        //    WorkspaceChanged(null, new EventArgs());
+
+        //    // create each child and set properties for it
+        //    foreach (FrameworkElement childElement in rootCanvas.Children)
+        //    {
+        //        string nameOfTypeOfContent = childElement.Tag.ToString();
+        //        Type typeOfContent = ElementsCatalogList.Catalog.Find(x => x.Name == nameOfTypeOfContent);
+        //        if (typeOfContent is null)
+        //        {
+        //            throw new InvalidOperationException($"Unknown element found: {nameOfTypeOfContent}");
+        //        }
+
+        //        var content = (ScreenElementContent)Activator.CreateInstance(typeOfContent);
+        //        var container = new ScreenElementContainer(content);
+
+        //        SetPropertiesToElementFromAnotherElement(container, childElement);
+        //        AddNewScreenElement(container);
+        //    }
+
+
+        //    foreach (var group in workspace.ElementPropertyGroups)
+        //    {
+        //        foreach (var property in group.ElementProperties)
+        //        {
+        //            string propertyTrueName = property.PropertyNameForXml is not null ? property.PropertyNameForXml : property.Name;
+        //            var foundProperty = rootCanvas.GetType().GetProperty(propertyTrueName);
+        //            if (foundProperty is null)
+        //            {
+        //                throw new InvalidOperationException($"Property {propertyTrueName} not found");
+        //            }
+
+        //            property.ValueObj = foundProperty.GetValue(rootCanvas);
+        //        }
+        //    }
+
+
+
+
+            
+        //    UndoRedo.DropAllActions();
+        //    UndoRedo.BasicUserAction(ElementsOnWorkSpace.Values.ToList());
+        //    WorkSpaceHeight = Workspace.Height;
+        //    WorkSpaceWidth = Workspace.Width;
+
+        //    //after this I see exception in workspace because of VM is null... WHY ???
+        //    //looks like there is mislinking with old workspace... check that!
+        //}
+
+        private void LoadScreenFromXamlFile2(string filePath)
         {
             /*      Loading
                 - use almost the same method as in scata itself - get root element (canvas) with all props
@@ -825,100 +976,182 @@ namespace ExpandScadaEditor.ScreenEditor
 
              */
 
+            // get canvas from xaml
+            // get special settings of canvas from element and set them for created canvas
+            // go through children
+            // check Tag of each 
+            //      - if matched with any of elenemts type from catalog list - create a container with this element included
+            //      - check each group and each setting
+            //      - if group is container-group - find these settings in element and set on container
+            //      - if group is not container - find settings values in element and set in content
+            //      - add element to canvas
+
+            foreach (var pair in ElementsOnWorkSpace)
+            {
+                DeleteElement(pair.Value);
+            }
 
 
 
 
+            // TODO clear???
+            //SelectedElements = new ObservableCollection<ScreenElement>();
+            //ElementsOnWorkSpace = new Dictionary<int, ScreenElement>();
+            //Workspace.Deinitialize();
 
+            string wholeFile = File.ReadAllText(filePath);
+            string[] lines = wholeFile.Split("\n");
 
+            // remove all empty strings
+            List<string> allLinesCleaned = new List<string>();
+            foreach (var line in lines)
+            {
+                if (!string.IsNullOrWhiteSpace(line))
+                {
+                    allLinesCleaned.Add(line.TrimEnd('\r'));
+                }
+            }
 
+            // get special section
+            var specislSectionResult = GetSpecialSection(allLinesCleaned);
 
+            // get root canvas 
+            Canvas rootCanvas = GetRootCanvasFromXaml(allLinesCleaned, specislSectionResult.startOfSpecialSectionLine);
 
-            //// As a test first
-            //Canvas workspace = new Canvas();
+            // Create Workspace and set properties from read rootCanvas
+            //WorkspaceCanvas workspace = new WorkspaceCanvas();
+            //Workspace = workspace;
+            //WorkspaceChanged(null, new EventArgs());
 
-            //// set personal settings of workspace
-            //foreach (var propertyGroup in Workspace.ElementPropertyGroups)
-            //{
-            //    foreach (var property in propertyGroup.ElementProperties)
-            //    {
-            //        PropertyInfo propertyToSave = workspace.GetType().GetProperty(property.Name, BindingFlags.Public | BindingFlags.Instance);
-            //        propertyToSave.SetValue(workspace, property.ValueObj);
-            //    }
-            //}
+            // create each child and set properties for it
+            foreach (FrameworkElement childElement in rootCanvas.Children)
+            {
+                string nameOfTypeOfContent = childElement.Tag.ToString();
+                Type typeOfContent = ElementsCatalogList.Catalog.Find(x => x.Name == nameOfTypeOfContent);
+                if (typeOfContent is null)
+                {
+                    throw new InvalidOperationException($"Unknown element found: {nameOfTypeOfContent}");
+                }
 
-            //foreach (var pair in ElementsOnWorkSpace)
-            //{
-            //    // TODO is it necessary to make a copy?
-            //    var type = pair.Value.GetType();
-            //    var container = (ScreenElement)Activator.CreateInstance(type, pair.Value.ElementContent);
-            //    container.InitializeFromAnotherElement(pair.Value);
+                var content = (ScreenElementContent)Activator.CreateInstance(typeOfContent);
+                var container = new ScreenElementContainer(content);
 
-            //    var content = container.ElementContent;
+                SetPropertiesToElementFromAnotherElement(container, childElement);
+                AddNewScreenElement(container);
+            }
 
-            //    // Set settings of container on content
-            //    // because of zooming we have to set position/size parameters manually
+            foreach (var group in Workspace.ElementPropertyGroups)
+            {
+                foreach (var property in group.ElementProperties)
+                {
+                    string propertyTrueName = property.PropertyNameForXml is not null ? property.PropertyNameForXml : property.Name;
+                    var foundProperty = rootCanvas.GetType().GetProperty(propertyTrueName);
+                    if (foundProperty is null)
+                    {
+                        throw new InvalidOperationException($"Property {propertyTrueName} not found");
+                    }
 
-            //    // get root of content 
-            //    var rootToSave = (FrameworkElement)content.FindName(ROOT_CONTENT_KEY_NAME);
+                    property.ValueObj = foundProperty.GetValue(rootCanvas);
+                }
+            }
 
-            //    content.Content = null;
-
-            //    var xamlCode1 = XamlWriter.Save(rootToSave);
-
-            //    Canvas.SetLeft(rootToSave, container.CoordX);
-            //    Canvas.SetTop(rootToSave, container.CoordY);
-
-            //    rootToSave.Width = container.Width;
-            //    rootToSave.Height = container.Height;
-
-            //    if (string.IsNullOrEmpty(container.Name))
-            //    {
-            //        rootToSave.Name = $"Element_ID_{container.Id}";
-            //    }
-            //    else
-            //    {
-            //        rootToSave.Name = container.Name;
-            //    }
-
-            //    // set personal settings of content
-
-            //    foreach (var propertyGroup in container.ElementPropertyGroups)
-            //    {
-            //        if (propertyGroup.IsGroupForContent)
-            //        {
-            //            foreach (var property in propertyGroup.ElementProperties)
-            //            {
-            //                PropertyInfo propertyToSave = rootToSave.GetType().GetProperty(property.Name, BindingFlags.Public | BindingFlags.Instance);
-            //                propertyToSave.SetValue(rootToSave, property.ValueObj);
-
-            //                // TODO make it like this and write errors to log/user, but now we want to see any error
-            //                //if (null != opacityProperty)
-            //                //{
-            //                //    opacityProperty.SetValue(rootToSave, 0.5);
-            //                //}
-            //            }
-            //        }
-            //    }
-
-            //    workspace.Children.Add(rootToSave);
-            //}
-
-            //var xamlCode = XamlWriter.Save(workspace);
-
-            //List<string> outputLines = new List<string>();
-            //outputLines.Add(xamlCode);
-            //outputLines.Add("<EditorBlockForConnections>");
-            //outputLines.Add("</EditorBlockForConnections>");
-
-            //using (StreamWriter outputFile = new StreamWriter(filePath))
-            //{
-
-            //    foreach (string line in outputLines)
-            //        outputFile.WriteLine(line);
-            //}
+            UndoRedo.DropAllActions();
+            UndoRedo.BasicUserAction(ElementsOnWorkSpace.Values.ToList());
+            WorkSpaceHeight = Workspace.Height;
+            WorkSpaceWidth = Workspace.Width;
 
         }
+
+
+
+
+
+
+        private void SetPropertiesToElementFromAnotherElement(ScreenElementContainer createdContainer, FrameworkElement elementFromFile)
+        {
+            foreach (var group in createdContainer.ElementPropertyGroups)
+            {
+                foreach (var property in group.ElementProperties)
+                {
+                    // process special properties
+                    switch (property.Name)
+                    {
+                        case "ID":
+                            // There is no IDs in xaml - skip it
+                            continue;
+                        case "X":
+                            double x = (double)elementFromFile.GetValue(Canvas.LeftProperty);
+                            property.ValueObj = x;
+                            break;
+                        case "Y":
+                            double y = (double)elementFromFile.GetValue(Canvas.TopProperty);
+                            property.ValueObj = y;
+                            break;
+                        default:
+                            string propertyTrueName = property.PropertyNameForXml is not null ? property.PropertyNameForXml : property.Name;
+                            var foundProperty = elementFromFile.GetType().GetProperty(propertyTrueName);
+                            if (foundProperty is null)
+                            {
+                                throw new InvalidOperationException($"Property {propertyTrueName} not found");
+                            }
+
+                            property.ValueObj = foundProperty.GetValue(elementFromFile);
+                            break;
+                    }
+                }
+            }
+
+        }
+
+
+
+
+        private (List<string> specialSection, int startOfSpecialSectionLine) GetSpecialSection(List<string> allLinesCleaned)
+        {
+            if (allLinesCleaned[allLinesCleaned.Count - 1] != "</EditorBlockForConnections>")
+            {
+                throw new InvalidOperationException($"Special section in screen file not found");
+            }
+
+            bool startOfSpecialSectionFound = false;
+            int lineOfStartOfSpecialSection = 0;
+            List<string> specialSectionLines = new List<string>();
+            for (int i = allLinesCleaned.Count - 1; i > 0; i--)
+            {
+                if (allLinesCleaned[i] != "<EditorBlockForConnections>")
+                {
+                    specialSectionLines.Insert(0, $"{allLinesCleaned[i]}\n");
+                }
+                else
+                {
+                    startOfSpecialSectionFound = true;
+                    specialSectionLines.Insert(0, $"{allLinesCleaned[i]}\n");
+                    lineOfStartOfSpecialSection = i;
+                    break;
+                }
+            }
+
+            if (!startOfSpecialSectionFound)
+            {
+                throw new InvalidOperationException($"Beginning of special section in screen file not found");
+            }
+
+            return (specialSectionLines, lineOfStartOfSpecialSection);
+        }
+
+        private Canvas GetRootCanvasFromXaml(List<string> allLinesCleaned , int lineOfStartOfSpecialSection)
+        {
+            List<string> rootElementLines = new List<string>();
+            for (int i = 0; i < lineOfStartOfSpecialSection; i++)
+            {
+                rootElementLines.Add($"{allLinesCleaned[i]}\n");
+            }
+
+            // get root canvas 
+            string rootElementString = string.Join(String.Empty, rootElementLines);
+            return (Canvas)XamlReader.Parse(rootElementString);
+        }
+
 
 
         public event PropertyChangedEventHandler PropertyChanged;

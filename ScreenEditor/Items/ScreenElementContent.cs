@@ -29,9 +29,12 @@ namespace ExpandScadaEditor.ScreenEditor.Items
             }
         }
 
-        public ScreenElementContent()
+        public ScreenElementContent(string elementTypeName)
         {
             CreateEditableProperties();
+
+            // Looks like a hack, but we need a fast solution right nyaa
+            this.Tag = elementTypeName;
         }
 
         private void CreateEditableProperties()

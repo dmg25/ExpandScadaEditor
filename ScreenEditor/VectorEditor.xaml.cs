@@ -197,25 +197,13 @@ namespace ExpandScadaEditor.ScreenEditor
         {
             InitializeComponent();
 
-           
-            // TODO For tests, later make it better
-            //ItemsTemplateSelector itemsTemplateSelector = (ItemsTemplateSelector)Resources["ItemsTemplateSelector"];
-            //Dictionary<string, DataTemplate> previewTemplates = new Dictionary<string, DataTemplate>
-            //{
-            //    //{nameof(TestItem1VM), CreateTemplateByName(typeof(TestItem1)) },
-            //    {nameof(TestItem2VM), CreateTemplateByName(typeof(TestItem2)) }
-            //};
-            //itemsTemplateSelector.previewTemplates = previewTemplates;
+            VM.WorkspaceChanged += VM_WorkspaceChanged;
+        }
 
-            
-            //VM.Initialize();
-
-            //// Here we have to save original state of this workspace. Opened new or loaded - here must be first point
-            //VM.UndoRedo.BasicUserAction(VM.ElementsOnWorkSpace.Values.ToList());
-
-            //// events for creating element 
-            //ElementCatalog.MouseLeftButtonUp += ElementCatalog_MouseLeftButtonUp;
-            //ElementCatalog.MouseMove += ElementCatalog_MouseMove;
+        private void VM_WorkspaceChanged(object sender, EventArgs e)
+        {
+            WorkSpace = VM.Workspace;
+            WorkSpace.Initialize(VM, WSScroller);
         }
 
         private void ElementCatalog_MouseMove(object sender, MouseEventArgs e)
@@ -350,6 +338,8 @@ namespace ExpandScadaEditor.ScreenEditor
             ElementCatalog.MouseLeftButtonUp += ElementCatalog_MouseLeftButtonUp;
             ElementCatalog.MouseMove += ElementCatalog_MouseMove;
         }
+
+
 
 
         // Catching hotheys. Standard way doesn't work at all (from XAML) by unknown reason. 
